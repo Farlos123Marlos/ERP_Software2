@@ -1,0 +1,103 @@
+.caixa-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100vh; /* Para ocupar a altura total da janela */
+}
+
+.gerenciar-caixa {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); /* Sombra */
+    margin: 20px 0;
+    margin-left: 80px;
+    position: relative;
+    top: 0;
+    flex-grow: 1; /* Ocupa mais espaço na tela */
+}
+
+.status-caixa {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); /* Sombra */
+    margin: 20px 0;
+    margin-left: 80px;
+    position: relative;
+    top: 0;
+    flex-grow: 1; /* Ocupa mais espaço na tela */
+}
+
+.status-caixa p {
+    margin: 10px 0;
+    font-size: 18px; /* Aumenta o tamanho do texto */
+    color: #333;
+}
+
+/* Negrito para os rótulos de informações importantes */
+.status-caixa p strong {
+    font-weight: bold;
+}
+
+/* Ajuste para a exibição das informações do caixa aberto */
+.status-caixa .info {
+    margin-bottom: 15px;
+}
+
+.gerenciar-caixa .button-wrapper {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.gerenciar-caixa button {
+    padding: 10px 20px;
+    background-color: #6e8efb;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.gerenciar-caixa button:hover {
+    background-color: #5a7af9;
+}
+
+.gerenciar-caixa input {
+    padding: 10px;
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* Estilo para tabelas ou listas de dados */
+.gerenciar-caixa table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.gerenciar-caixa table th, .gerenciar-caixa table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Estilo responsivo para dispositivos menores */
+@media (max-width: 768px) {
+    .caixa-container {
+        flex-direction: column;
+    }
+
+    .status-caixa {
+        max-width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .gerenciar-caixa {
+        flex: none;
+    }
+}
