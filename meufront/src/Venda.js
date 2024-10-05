@@ -11,20 +11,19 @@ function Venda() {
     // Função para buscar o produto via API
     const buscarProduto = async () => {
         try {
-            const response = await fetch(`/api/produto?codigoBarras=${produtoAtual}`);
+            const response = await fetch(`http://localhost:3001/buscarEstoque?busca=${produtoAtual}`);
             if (!response.ok) throw new Error('Produto não encontrado');
             const produto = await response.json();
-            
             // Adicionar o produto à lista temporária com a quantidade e preço
-            const novoProduto = {
-                id_produto: produto.id,
-                nome: produto.nomeProduto,
-                quantidade: quantidade,
-                preco_unitario: produto.preco,
+            const  novoProduto =  {
+             id: produto[0].id_produto,
+              nome:  produto[0].nome,
+              qtd: quantidade,
+             preco: produto[0].valor_compra,
             };
-
+            console.log("teste de Np",novoProduto.preco);
             setProdutos([...produtos, novoProduto]);
-            setTotal(total + novoProduto.preco_unitario * quantidade);
+            setTotal(total + novoProduto.preco * quantidade);
             setProdutoAtual('');
             setQuantidade(1);
         } catch (error) {
@@ -78,7 +77,7 @@ function Venda() {
                 <ul>
                     {produtos.map((produto, index) => (
                         <li key={index}>
-                            {produto.nome} - Quantidade: {produto.quantidade} - Preço: R$ {(produto.preco_unitario * produto.quantidade).toFixed(2)}
+                            {produto.nome} - Quantidade: {produto.qtd} - Preço: R$ {(produto.preco * produto.qtd).toFixed(2)}
                         </li>
                     ))}
                 </ul>

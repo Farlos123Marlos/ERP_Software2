@@ -41,8 +41,9 @@ function initializeDatabase() {
     const createProdutosTable = `
         CREATE TABLE IF NOT EXISTS produtos (
             id_produto INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
+            nome TEXT UNIQUE NOT NULL,
             valor_compra DECIMAL(10, 2) NOT NULL,
+            valor DECIMAL(10, 2) NOT NULL,
             codigo_barras TEXT UNIQUE NOT NULL
         );
     `;
@@ -178,24 +179,27 @@ function adicionarItemVenda(id_venda, id_produto, quantidade) {
 }
 
 // Função para cadastrar um produto
-function cadastrarProduto(nome, valor_compra, codigo_barras) {
-    const stmt = db.prepare('INSERT INTO produtos (nome, valor_compra, codigo_barras) VALUES (?, ?, ?)');
-    return stmt.run(nome, valor_compra, codigo_barras);
+function cadastrarProduto(nome, valor_compra, valor, codigo_barras) {
+    const stmt = db.prepare('INSERT INTO produtos (nome, valor_compra, valor, codigo_barras) VALUES (?, ?, ?, ?)');
+    return stmt.run(nome, valor_compra, valor, codigo_barras);
 }
 
 // Função para inserir um produto no estoque
 function inserirEstoque(id_produto, quantidade) {
+    console.log("entrou em inserir estoque");
     const stmt = db.prepare('INSERT INTO estoque (id_produto, quantidade) VALUES (?, ?)');
     return stmt.run(id_produto, quantidade);
 }
 
 //Função para buscar estoque
 function buscarEstoque(busca = '') {
+    //console.log("entrou na clausula de busca");
     let query = `
         SELECT 
             produtos.id_produto, 
             produtos.nome, 
-            produtos.valor_compra, 
+            produtos.valor_compra,
+            produtos.valor,
             produtos.codigo_barras, 
             estoque.quantidade
         FROM estoque
@@ -204,6 +208,7 @@ function buscarEstoque(busca = '') {
 
     // Verifica se há busca e adiciona a cláusula WHERE para filtrar
     if (busca) {
+       console.log("entrou na clausula de busca");
         query += `
             WHERE produtos.nome LIKE ? OR produtos.codigo_barras LIKE ?
         `;
@@ -217,6 +222,8 @@ function buscarEstoque(busca = '') {
 
 function loginUser(login, senha) {
     // Busca o usuário pelo login
+    //insertUser("kauan","123");
+    console.log("inseriu?");
     const usuario = db.prepare('SELECT id_usuario, senha_hash FROM usuarios WHERE login = ?').get(login);
     console.log(senha);
     // Se o usuário não existir, retorne um erro
@@ -247,6 +254,7 @@ function adicionarAoEstoque(id_produto, quantidade) {
 
 // Função para buscar produto pelo código de barras
 function buscarProduto(codigoBarras) {
+    console.log("entrou no buscar produtos do service")
     const db = getDatabaseConnection();
     const query = `SELECT * FROM produtos WHERE codigo_barras = ?`;
     return db.prepare(query).get(codigoBarras);

@@ -4,6 +4,7 @@ import './Estoque.css';
 const Estoque = () => {
   const [nomeProduto, setNomeProduto] = useState('');
   const [valorVenda, setValorVenda] = useState('');
+  const [valorCompra, setValor] = useState('');
   const [codigoBarras, setCodigoBarras] = useState('');
   const [quantidadeEstoque, setQuantidadeEstoque] = useState('');
   const [produtos, setProdutos] = useState([]);
@@ -18,6 +19,7 @@ const Estoque = () => {
   // Função para buscar produtos da API
   const buscarProdutos = async () => {
     try {
+      console.log("test");
       const response = await fetch(`http://localhost:3001/buscarEstoque?busca=${busca}`);
       const data = await response.json();
       setProdutos(data);
@@ -36,8 +38,9 @@ const Estoque = () => {
 
   // Função de cadastro de produto
   const cadastrarProduto = async (e) => {
+    console.log("entrou em cP");
     e.preventDefault();
-    const produto = { nomeProduto: nomeProduto, valorDe: valorVenda, codigoBarras: codigoBarras, qtd: quantidadeEstoque };
+    const produto = { nomeProduto: nomeProduto, valorDe: valorVenda, valor: valorCompra, codigoBarras: codigoBarras, qtd: quantidadeEstoque };
 
     try {
       const response = await fetch('http://localhost:3001/inserirEstoque', {
@@ -51,6 +54,7 @@ const Estoque = () => {
         buscarProdutos(); // Atualiza a tabela após o cadastro
         setNomeProduto('');
         setValorVenda('');
+        setValor('');
         setCodigoBarras('');
         setQuantidadeEstoque('');
       }
@@ -130,6 +134,15 @@ const Estoque = () => {
             required
           />
 
+          <label>Valor de Compra:</label>
+          <input
+            type="number"
+            step="0.01"
+            value={valorCompra}
+            onChange={(e) => setValor(e.target.value)}
+            required
+          />
+
           <label>Código de Barras:</label>
           <input
             type="text"
@@ -165,6 +178,7 @@ const Estoque = () => {
             <tr>
               <th>Nome do Produto</th>
               <th>Valor de Venda</th>
+              <th>Valor de Compra</th>
               <th>Código de Barras</th>
               <th>Quantidade em Estoque</th>
             </tr>
@@ -174,6 +188,7 @@ const Estoque = () => {
               <tr key={produto.id}>
                 <td>{produto.nome}</td>
                 <td>{produto.valor_compra}</td>
+                <td>{produto.valor}</td>
                 <td>{produto.codigo_barras}</td>
                 <td>{produto.quantidade}</td>
                 <td>

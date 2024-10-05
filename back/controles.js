@@ -2,25 +2,32 @@ const servicos = require('./servicos');
 
 // Controle para inserir usuário
 function AtualizarEstoque(req, res) {
-    console.log("AtualizarEstoque em andamento");
-    const { nomeProduto, valorDe, codigoBarras, qtd } = req.body;
+    const { nomeProduto, valorDe, valor,  codigoBarras, qtd } = req.body;
     let produtoId;
-
+    
     // Tentar cadastrar o produto
     try {
-        const result = servicos.cadastrarProduto(nomeProduto, valorDe, codigoBarras);
+        
+        const result = servicos.cadastrarProduto(nomeProduto, valorDe, valor, codigoBarras);
+    
         produtoId = result.lastInsertRowid; // Pegar o ID do produto cadastrado
+        
     } catch (error) {
         // Retornar erro ao cadastrar o produto
+       
         return res.status(500).json({ error: 'Erro ao cadastrar o produto' });
+        
     }
 
     // Se o produto foi cadastrado, tentar inserir no estoque
     try {
+        
         servicos.inserirEstoque(produtoId, qtd);
+        
         // Retornar sucesso com o ID do produto e a quantidade inserida no estoque
         res.status(201).json({ id: produtoId, quantidade: qtd });
     } catch (error) {
+        //console.log("AI N ENTRA");
         // Retornar erro ao atualizar o estoque
         return res.status(500).json({ error: 'Erro ao atualizar o estoque' });
     }
@@ -30,10 +37,11 @@ function AtualizarEstoque(req, res) {
 // Controle para buscar todos os usuários
 function buscarEstoque(req, res) {
     const { busca } = req.query; // Recebe o parâmetro de busca
-
+   
     try {
         const resultado = servicos.buscarEstoque(busca); // Chama o serviço com o parâmetro de busca
         res.status(200).json(resultado);
+        console.log("resultado da busca",resultado);
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar estoque' });
     }
@@ -82,8 +90,9 @@ function adicionarEstoque(req, res) {
 }
 
 function buscarProduto(req, res) {
+    console.log("entrou na busca de produtos");
     const { codigoBarras } = req.query; // Recebe o código de barras da query string
-
+        console.log("entrou na busca de produtos", req.query.codigoBarras);
     try {
         const produto = servicos.buscarProduto(codigoBarras);
         if (!produto) {
