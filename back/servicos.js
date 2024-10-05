@@ -68,21 +68,6 @@ function initializeDatabase() {
         );
     `;
 
-    function addValorFinalColumn() {
-    try {
-        db.exec(`
-            ALTER TABLE abertura_caixa
-            ADD COLUMN valor_final DECIMAL(10, 2);
-        `);
-        console.log("Coluna valor_final adicionada com sucesso.");
-    } catch (error) {
-        if (error.message.includes("duplicate column name")) {
-            console.log("A coluna valor_final já existe.");
-        } else {
-            console.error("Erro ao adicionar a coluna valor_final:", error);
-        }
-    }
-}
 
     // Executando as queries de criação
     db.exec(createUsersTable);

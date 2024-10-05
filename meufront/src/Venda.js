@@ -7,6 +7,29 @@ function Venda() {
     const [quantidade, setQuantidade] = useState(1); // Quantidade selecionada para o produto atual
     const [total, setTotal] = useState(0); // Valor total da venda
     const [formaPagamento, setFormaPagamento] = useState('dinheiro'); // Forma de pagamento
+    const [pagamentos, setPagamentos] = useState([]); // Lista de pagamentos
+    const [formaPagamentoAtual, setFormaPagamentoAtual] = useState('dinheiro'); // Método de pagamento atual
+    const [valorPagamento, setValorPagamento] = useState(0); // Valor do pagamento atual
+    const [valorFaltante, setValorFaltante] = useState(total); // Valor ainda a ser pago
+
+    const caixaAtual = sessionStorage.getItem('idcaixa');
+    
+
+    const adicionarPagamento = () => {
+        if (valorPagamento > 0 && valorPagamento <= valorFaltante) {
+            const novoPagamento = {
+                metodo_pagamento: formaPagamentoAtual,
+                valor: valorPagamento,
+            };
+    
+            setPagamentos([...pagamentos, novoPagamento]);
+            setValorFaltante(valorFaltante - valorPagamento); // Atualiza o valor restante
+            setValorPagamento(0); // Reseta o valor do pagamento atual
+        } else {
+            alert('Valor inválido ou excede o valor faltante.');
+        }
+    };
+    
 
     // Função para buscar o produto via API
     const buscarProduto = async () => {
@@ -24,6 +47,7 @@ function Venda() {
             console.log("teste de Np",novoProduto.preco);
             setProdutos([...produtos, novoProduto]);
             setTotal(total + novoProduto.preco * quantidade);
+            setValorFaltante(valorFaltante + novoProduto.preco * quantidade)
             setProdutoAtual('');
             setQuantidade(1);
         } catch (error) {
@@ -33,29 +57,29 @@ function Venda() {
 
     // Função para confirmar a venda e enviar ao backend
     const confirmarVenda = async () => {
-        const venda = {
-            data_venda: new Date().toISOString().split('T')[0],
-            valor_total: total,
-            forma_pagamento: formaPagamento,
-        };
-
+        if (valorFaltante > 0) {
+            alert('Ainda há saldo pendente!');
+            return;
+        }
+    
         try {
-            const response = await fetch('/api/venda', {
+            const response = await fetch('http://localhost:3001/confirmarVenda', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ venda, itens: produtos }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idCaixa: caixaAtual,
+                    total: total,
+                    pagamentos: pagamentos,
+                }),
             });
-
-            if (!response.ok) throw new Error('Erro ao registrar venda');
-            alert('Venda registrada com sucesso!');
-            setProdutos([]); // Limpa o "carrinho" após confirmação
-            setTotal(0);
+    
+            const result = await response.json();
+            console.log('Venda confirmada', result);
         } catch (error) {
             console.error('Erro ao confirmar a venda:', error);
         }
     };
+    
 
     return (
         <div className="venda-container">
@@ -86,23 +110,41 @@ function Venda() {
             </div>
 
             <div className="venda-detalhes">
-                <h1>Valor Total: R$ {total.toFixed(2)}</h1>
-                <p>Quantidade de produtos: {produtos.length}</p>
+{/* Detalhes da venda, listagem de produtos e total */}
+<h2>Total: R${total}</h2>
+    <h3>Faltante: R${valorFaltante}</h3>
+    
+    {/* Interface para adicionar pagamentos */}
+    <div>
+        <label>Forma de Pagamento:</label>
+        <select value={formaPagamentoAtual} onChange={(e) => setFormaPagamentoAtual(e.target.value)}>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_credito">Cartão de Crédito</option>
+            <option value="cartao_debito">Cartão de Débito</option>
+        </select>
+        
+        <label>Valor:</label>
+        <input 
+            type="number" 
+            value={valorPagamento} 
+            onChange={(e) => setValorPagamento(parseFloat(e.target.value))}
+        />
 
-                <div className="forma-pagamento">
-                    <label htmlFor="pagamento">Forma de Pagamento:</label>
-                    <select
-                        id="pagamento"
-                        value={formaPagamento}
-                        onChange={(e) => setFormaPagamento(e.target.value)}
-                    >
-                        <option value="dinheiro">Dinheiro</option>
-                        <option value="cartao">Cartão</option>
-                        <option value="pix">Pix</option>
-                    </select>
-                </div>
+        <button onClick={adicionarPagamento}>Adicionar Pagamento</button>
+    </div>
 
-                <button className="confirmar-venda" onClick={confirmarVenda}>Confirmar Venda</button>
+    {/* Lista de pagamentos */}
+    <h4>Pagamentos:</h4>
+    <ul>
+        {pagamentos.map((pagamento, index) => (
+            <li key={index}>{pagamento.metodo_pagamento}: R${pagamento.valor}</li>
+        ))}
+    </ul>
+
+    {/* Botão para confirmar venda quando o valor total for coberto */}
+    {valorFaltante === 0 && (
+        <button onClick={confirmarVenda}>Confirmar Venda</button>
+    )}
             </div>
         </div>
     );
