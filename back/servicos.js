@@ -76,10 +76,11 @@ function initializeDatabase() {
         ); 
     `;
 
-    db.exec(createVendaPagamentosTable);
+  
 
 
     // Executando as queries de criação
+    db.exec(createVendaPagamentosTable);
     db.exec(createUsersTable);
     db.exec(createCaixaTable);
     db.exec(createVendasTable);
@@ -156,7 +157,7 @@ function fecharCaixa(id_caixa, valor_final) {
 }
 
 function confirmarVendas(id_caixa, valor_total) {
-        //console.log("aaaaaaaaaaaa", id_caixa, valor_total);
+        console.log("aaaaaaaaaaaa", id_caixa, valor_total);
         const data_hora_venda = getCurrentDateTime() // Pega a data e hora atual no formato ISO
         //console.log("DATA E HORA", data_hora_venda);
         const stmt = db.prepare(`
@@ -209,15 +210,16 @@ function adicionarItemVenda(idCaixa,total,pagamentos,produtos) {
         console.log("Produtos agrupados", produtosAgrupados);
     // Verifica se há estoque suficiente
 
-   produtos.forEach(produto => {
+    Object.values(produtosAgrupados).forEach(produto => {
         const estoque = db.prepare('SELECT quantidade FROM estoque WHERE id_produto = ?').get(produto.id);
         
         // Verifica se a quantidade em estoque é suficiente para o produto
-        if (estoque.quantidade < produtosAgrupados.qtd) {
-            throw new Error(`Estoque insuficiente para o produto ID: ${produtosAgrupados.id} - Nome: ${produtosAgrupados.nome}`);
-        }
+        if (estoque.quantidade < produto.qtd) {
+            throw new Error(`Estoque insuficiente para o produto ID: ${produto.id} - Nome: ${produto.nome}`);
+        }else console.log("passou");
     });
     console.log("Todos os produtos têm estoque suficiente.");
+
         venda = confirmarVendas(idCaixa,total); //gerar a venda e em seguida add venda do produto
         console.log("VENDA OK.Id da venda:", venda.lastInsertRowid);
 
@@ -225,11 +227,13 @@ function adicionarItemVenda(idCaixa,total,pagamentos,produtos) {
            INSERT INTO itens_venda (id_venda, id_produto, quantidade)
             VALUES (?, ?, ?)
         `);
-        produtos.forEach(produtosAgrupados => {
+
+        Object.values(produtosAgrupados).forEach(produto => {
             // Insere o produto na tabela itens_venda
-            stmt.run(venda.lastInsertRowid, produtosAgrupados.id, produtosAgrupados.qtd);
+            stmt.run(venda.lastInsertRowid, produto.id, produto.qtd);
             //console.log(`Venda registrada: Produto ID: ${produtosAgrupados.id}, Quantidade: ${produtosAgrupados.qtd}`);
         });
+        
     }
 
 

@@ -41,7 +41,7 @@ function buscarEstoque(req, res) {
     try {
         const resultado = servicos.buscarEstoque(busca); // Chama o serviço com o parâmetro de busca
         res.status(200).json(resultado);
-        console.log("resultado da busca",resultado);
+       // console.log("resultado da busca",resultado);
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar estoque' });
     }
@@ -67,8 +67,9 @@ function confirmarVenda(req,res){
     try{
        const {idCaixa, total, pagamentos,produto} = req.body;
         //const Venda =  servicos.confirmarVendas(idCaixa,total);//registrat a venda
-        
+        console.log("Id do caixa", idCaixa);
         servicos.adicionarItemVenda(idCaixa,total,pagamentos,produto);
+      
         console.log('entrou em confirmar vendas');
         //console.log(Venda);
         //console.log("2entrou em confirmar no Controler, produtos:", produto);
