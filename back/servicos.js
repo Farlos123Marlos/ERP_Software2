@@ -31,7 +31,6 @@ function initializeDatabase() {
             id_venda INTEGER PRIMARY KEY AUTOINCREMENT,
             id_caixa INTEGER NOT NULL,
             data_hora_venda DATETIME NOT NULL,
-            metodo_pagamento TEXT NOT NULL,
             valor_total DECIMAL(10, 2) NOT NULL,
             FOREIGN KEY (id_caixa) REFERENCES abertura_caixa(id_caixa)
         );
@@ -67,22 +66,18 @@ function initializeDatabase() {
             FOREIGN KEY (id_produto) REFERENCES produtos(id_produto)
         );
     `;
+    const createVendaPagamentosTable = `
+    CREATE TABLE IF NOT EXISTS venda_pagamentos (
+        id_pagamento INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_venda INTEGER NOT NULL,
+        metodo_pagamento TEXT NOT NULL,
+        valor DECIMAL(10, 2) NOT NULL,
+        FOREIGN KEY (id_venda) REFERENCES vendas(id_venda)
+        ); 
+    `;
 
-    function addValorFinalColumn() {
-    try {
-        db.exec(`
-            ALTER TABLE abertura_caixa
-            ADD COLUMN valor_final DECIMAL(10, 2);
-        `);
-        console.log("Coluna valor_final adicionada com sucesso.");
-    } catch (error) {
-        if (error.message.includes("duplicate column name")) {
-            console.log("A coluna valor_final já existe.");
-        } else {
-            console.error("Erro ao adicionar a coluna valor_final:", error);
-        }
-    }
-}
+    db.exec(createVendaPagamentosTable);
+
 
     // Executando as queries de criação
     db.exec(createUsersTable);
@@ -115,7 +110,19 @@ function initializeDatabase() {
     db.exec(createRevertTrigger);
 }
 
-
+function getCurrentDateTime() {
+    const now = new Date();
+    const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false, // Para formato 24 horas
+    };
+    return now.toLocaleString('pt-BR', options); // Ajuste o locale conforme necessário
+}
 // Função para inserir um usuário
 function insertUser(login, senha_hash) {
     const stmt = db.prepare('INSERT INTO usuarios (login, senha_hash) VALUES (?, ?)');
@@ -148,35 +155,84 @@ function fecharCaixa(id_caixa, valor_final) {
     }
 }
 
-// Função para registrar uma venda
-function registrarVenda(id_caixa, metodo_pagamento, valor_total) {
-    // Verifica se o caixa está aberto
-    const caixa = db.prepare('SELECT status FROM abertura_caixa WHERE id_caixa = ?').get(id_caixa);
-    if (caixa.status !== 'aberta') {
-        throw new Error('Não é possível registrar vendas em um caixa encerrado.');
-    }
+function confirmarVendas(id_caixa, valor_total) {
+        //console.log("aaaaaaaaaaaa", id_caixa, valor_total);
+        const data_hora_venda = getCurrentDateTime() // Pega a data e hora atual no formato ISO
+        //console.log("DATA E HORA", data_hora_venda);
+        const stmt = db.prepare(`
+            INSERT INTO vendas (id_caixa, data_hora_venda, valor_total) 
+            VALUES (?, ?, ?)
+        `);
 
-    const stmt = db.prepare(`
-        INSERT INTO vendas (id_caixa, data_hora_venda, metodo_pagamento, valor_total)
-        VALUES (?, datetime('now'), ?, ?)
-    `);
-    return stmt.run(id_caixa, metodo_pagamento, valor_total);
+         return stmt.run(id_caixa, data_hora_venda, valor_total);
+        
 }
 
-// Função para adicionar itens à venda
-function adicionarItemVenda(id_venda, id_produto, quantidade) {
-    // Verifica se há estoque suficiente
-    const estoque = db.prepare('SELECT quantidade FROM estoque WHERE id_produto = ?').get(id_produto);
-    if (estoque.quantidade < quantidade) {
-        throw new Error('Estoque insuficiente para o produto selecionado.');
-    }
+function pagamentoVendas(id_venda, pagamentos){
+
+    console.log("id da venda", id_venda);
+    console.log("/Pagamentos dentro de pagamentoVendas: ", pagamentos);
     
     const stmt = db.prepare(`
-        INSERT INTO itens_venda (id_venda, id_produto, quantidade)
+        INSERT INTO venda_pagamentos (id_venda, metodo_pagamento, valor) 
         VALUES (?, ?, ?)
     `);
-    return stmt.run(id_venda, id_produto, quantidade);
+    const select = db.prepare(`
+        SELECT * from venda_pagamentos
+    `);
+    
+
+ 
+    pagamentos.forEach(pagamento => {
+        console.log("teste doos parametros pagametno: ",pagamento.metodo_pagamento, pagamento.valor)
+        stmt.run(id_venda, pagamento.metodo_pagamento, pagamento.valor);
+    });
+    const tabela = select.all();
+    console.log("Log da tabela pags:", tabela);
 }
+
+
+// Função para adicionar itens à venda
+function adicionarItemVenda(idCaixa,total,pagamentos,produtos) {
+    const produtosAgrupados = {};
+
+    produtos.forEach(produto => {
+        // Verifica se o produto com o mesmo ID já foi adicionado ao agrupamento
+        if (produtosAgrupados[produto.id]) {
+            // Se sim, soma a quantidade
+            produtosAgrupados[produto.id].qtd += produto.qtd;
+        } else {
+            // Se não, adiciona o produto ao agrupamento
+            produtosAgrupados[produto.id] = { ...produto };
+        }
+    });
+        console.log("Produtos agrupados", produtosAgrupados);
+    // Verifica se há estoque suficiente
+
+   produtos.forEach(produto => {
+        const estoque = db.prepare('SELECT quantidade FROM estoque WHERE id_produto = ?').get(produto.id);
+        
+        // Verifica se a quantidade em estoque é suficiente para o produto
+        if (estoque.quantidade < produtosAgrupados.qtd) {
+            throw new Error(`Estoque insuficiente para o produto ID: ${produtosAgrupados.id} - Nome: ${produtosAgrupados.nome}`);
+        }
+    });
+    console.log("Todos os produtos têm estoque suficiente.");
+        venda = confirmarVendas(idCaixa,total); //gerar a venda e em seguida add venda do produto
+        console.log("VENDA OK.Id da venda:", venda.lastInsertRowid);
+
+        const stmt = db.prepare(`
+           INSERT INTO itens_venda (id_venda, id_produto, quantidade)
+            VALUES (?, ?, ?)
+        `);
+        produtos.forEach(produtosAgrupados => {
+            // Insere o produto na tabela itens_venda
+            stmt.run(venda.lastInsertRowid, produtosAgrupados.id, produtosAgrupados.qtd);
+            //console.log(`Venda registrada: Produto ID: ${produtosAgrupados.id}, Quantidade: ${produtosAgrupados.qtd}`);
+        });
+    }
+
+
 
 // Função para cadastrar um produto
 function cadastrarProduto(nome, valor_compra, valor, codigo_barras) {
@@ -223,7 +279,7 @@ function buscarEstoque(busca = '') {
 function loginUser(login, senha) {
     // Busca o usuário pelo login
     //insertUser("kauan","123");
-    console.log("inseriu?");
+    //console.log("inseriu?");
     const usuario = db.prepare('SELECT id_usuario, senha_hash FROM usuarios WHERE login = ?').get(login);
     console.log(senha);
     // Se o usuário não existir, retorne um erro
@@ -260,6 +316,7 @@ function buscarProduto(codigoBarras) {
     return db.prepare(query).get(codigoBarras);
 }
 
+
 // Função para verificar se há um caixa aberto
 function verificarCaixaAberto() {
     const stmt = db.prepare(`
@@ -275,8 +332,9 @@ module.exports = {
     insertUser,
     abrirCaixa,
     fecharCaixa,
-    registrarVenda,
+    confirmarVendas,
     adicionarItemVenda,
+    pagamentoVendas,
     cadastrarProduto,
     inserirEstoque,
     buscarEstoque,

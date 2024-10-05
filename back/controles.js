@@ -48,7 +48,7 @@ function buscarEstoque(req, res) {
 }
 
 function abrirCaixa(req, res){
-
+//rdwefasfw
 }
 
 function login(req, res) {
@@ -59,6 +59,24 @@ function login(req, res) {
         res.status(200).json({ id: userId }); // Retorna o ID do usuário
     } catch (error) {
         res.status(401).json({ error: error.message }); // Retorna erro 401 para credenciais inválidas
+    }
+}
+
+function confirmarVenda(req,res){
+
+    try{
+       const {idCaixa, total, pagamentos,produto} = req.body;
+        //const Venda =  servicos.confirmarVendas(idCaixa,total);//registrat a venda
+        
+        servicos.adicionarItemVenda(idCaixa,total,pagamentos,produto);
+        console.log('entrou em confirmar vendas');
+        //console.log(Venda);
+        //console.log("2entrou em confirmar no Controler, produtos:", produto);
+        //servicos.pagamentoVendas(Venda.lastInsertRowid, pagamentos);
+        return res.status(201).json({message:'Venda confirmada.'});
+
+    }catch (error){
+       return res.status(500).json({error: error.message});
     }
 }
 
@@ -103,7 +121,6 @@ function buscarProduto(req, res) {
         res.status(500).json({ error: 'Erro ao buscar produto: ' + error.message });
     }
 }
-
 // Controlador para abrir o caixa
 function abrirCaixaController(req, res) {
     const { id_usuario, data_hora_abertura, valor_inicial } = req.body;
@@ -158,6 +175,7 @@ module.exports = {
     buscarEstoque,
     abrirCaixa,
     login,
+    confirmarVenda,
     insertUser,
     adicionarEstoque,
     buscarProduto,

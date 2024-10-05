@@ -19,6 +19,9 @@ router.get('/buscaProduto', controles.buscarProduto);
 // Rotas abrir caixa
 router.post('/abrirCaixa', controles.abrirCaixa);
 
+//confirmar venbda
+router.post('/confirmarVenda', controles.confirmarVenda)
+
 // Rotas de usuario
 router.post('/login', controles.login);
 router.post('/newUser', controles.insertUser);
