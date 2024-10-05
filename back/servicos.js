@@ -212,16 +212,17 @@ function adicionarItemVenda(idCaixa,total,pagamentos,produtos) {
 
     Object.values(produtosAgrupados).forEach(produto => {
         const estoque = db.prepare('SELECT quantidade FROM estoque WHERE id_produto = ?').get(produto.id);
-        
         // Verifica se a quantidade em estoque é suficiente para o produto
         if (estoque.quantidade < produto.qtd) {
             throw new Error(`Estoque insuficiente para o produto ID: ${produto.id} - Nome: ${produto.nome}`);
-        }else console.log("passou");
+        }
+       
     });
     console.log("Todos os produtos têm estoque suficiente.");
 
         venda = confirmarVendas(idCaixa,total); //gerar a venda e em seguida add venda do produto
         console.log("VENDA OK.Id da venda:", venda.lastInsertRowid);
+        console.log("dentro da verificacao de estoque");
 
         const stmt = db.prepare(`
            INSERT INTO itens_venda (id_venda, id_produto, quantidade)
@@ -233,8 +234,20 @@ function adicionarItemVenda(idCaixa,total,pagamentos,produtos) {
             stmt.run(venda.lastInsertRowid, produto.id, produto.qtd);
             //console.log(`Venda registrada: Produto ID: ${produtosAgrupados.id}, Quantidade: ${produtosAgrupados.qtd}`);
         });
+
+        const stmtPagamentos = db.prepare(`
+            INSERT INTO venda_pagamentos (id_venda, metodo_pagamento, valor)
+            VALUES (?, ?, ?)
+        `);
         
-    }
+        // Insere os pagamentos na tabela venda_pagamentos
+        console.log("ANTES DO PAGAMENTO");-
+        pagamentos.forEach(pagamento => {
+            stmtPagamentos.run(venda.lastInsertRowid, pagamento.metodo_pagamento, pagamento.valor);
+            console.log(`Pagamento registrado: Método: ${pagamento.metodo_pagamento}, Valor: R$ ${pagamento.valor.toFixed(2)}`);
+        });
+        
+}
 
 
 
