@@ -134,6 +134,37 @@ function adicionarEstoque(req, res) {
     }
 }
 
+function AtualizarEstoque(req, res) {
+    const { nomeProduto, valorDe, valor, descricao, codigoBarras, qtd } = req.body;
+    let produtoId;
+    
+    try {
+        const result = servicos.cadastrarProduto(nomeProduto, valorDe, valor, descricao, codigoBarras);
+        produtoId = result.lastInsertRowid;
+    } catch (error) {
+        return res.status(500).json({ error: 'Erro ao cadastrar o produto' });
+    }
+
+    try {
+        servicos.inserirEstoque(produtoId, qtd);
+        res.status(201).json({ id: produtoId, quantidade: qtd });
+    } catch (error) {
+        return res.status(500).json({ error: 'Erro ao atualizar o estoque' });
+    }
+}
+function atualizarProduto(req, res) {
+    const { idProduto, nomeProduto, valorDe, valor, descricao } = req.body;
+    console.log("aaaaa",idProduto, nomeProduto, valorDe, valor, descricao);
+    try {
+      // Chama o serviço para atualizar o produto
+      servicos.atualizarProduto(idProduto, nomeProduto, valorDe, valor, descricao);
+      res.status(200).json({ message: 'Produto atualizado com sucesso!' });
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao atualizar o produto: ' + error.message });
+    }
+  }
+
+
 function buscarProduto(req, res) {
     console.log("entrou na busca de produtos");
     const { codigoBarras } = req.query; // Recebe o código de barras da query string
@@ -185,8 +216,8 @@ async function fecharCaixaController(req, res) {
             console.log("VAlores discrepantes");
             const success = servicos.fecharCaixa(id_caixa, valor_final);// Fechar o caixa se houver confirmação
         }else{
-            const success = servicos.fecharCaixa(id_caixa, valorTotal);// Fechar o caixa se houver confirmação
-        } 
+            
+        } const success = servicos.fecharCaixa(id_caixa, valorTotal);// Fechar o caixa se houver confirmação
         
         if (success) {
             res.status(200).json({ success: true, message: 'Caixa encerrado com sucesso', valorTotal });
@@ -300,6 +331,7 @@ module.exports = {
     //relatorioVendasData,
     //relatorioVendasCaixa,
     AtualizarEstoque,
+    atualizarProduto,
     buscarEstoque,
     login,
     confirmarVenda,

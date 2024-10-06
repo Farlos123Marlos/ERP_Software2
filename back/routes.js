@@ -5,7 +5,7 @@ const controles = require('./controles');
 // Rota de estoque
 router.post('/inserirEstoque', controles.AtualizarEstoque);
 router.get('/buscarEstoque', controles.buscarEstoque);
-router.post('/addQtd', controles.adicionarEstoque);
+router.post('/atualizarProduto', controles.atualizarProduto);
 
 // Rota de caixa
 router.post('/abrirCaixa', controles.abrirCaixaController);
