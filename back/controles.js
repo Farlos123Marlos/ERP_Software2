@@ -3,7 +3,7 @@ const { printReceipt } = require('./Imp.js');
 
 
 // Relatório de vendas por data
-function relatorioVendasData(req, res) {
+/*function relatorioVendasData(req, res) {
     const { dataInicial, dataFinal } = req.query;
 
     try {
@@ -24,7 +24,7 @@ function relatorioVendasCaixa(req, res) {
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar relatório de vendas por caixa' });
     }
-}
+}*/
 
 // Controle para inserir usuário
 function AtualizarEstoque(req, res) {
@@ -73,9 +73,6 @@ function buscarEstoque(req, res) {
     }
 }
 
-function abrirCaixa(req, res){
-//rdwefasfw
-}
 
 function login(req, res) {
     const { login, senha_hash } = req.body;
@@ -102,7 +99,7 @@ function confirmarVenda(req,res){
         //console.log("2entrou em confirmar no Controler, produtos:", produto);
         //servicos.pagamentoVendas(Venda.lastInsertRowid, pagamentos);
         const impressora = 'POS-80C (copy 1)';
-        printReceipt(impressora, produto);
+        //printReceipt(impressora, produto);
         return res.status(201).json({message:'Venda confirmada.'});
 
     }catch (error){
@@ -200,12 +197,80 @@ function verificarCaixaAbertoController(req, res) {
     }
 }
 
+function exibirResultados(req, res) {
+    // Busca todos os itens vendidos usando o serviço
+    console.log('Rodando Exibir Resultados');
+    const itensVendidos = servicos.buscarItensVendidos();
+
+    // Inicializando variáveis para receita, custo e lucro
+    let receitaTotal = 0;
+    let custoTotal = 0;
+    let lucroTotal = 0;
+
+    // Percorrendo os itens vendidos para calcular receita, custo e lucro
+    itensVendidos.forEach(item => {
+        const receita = item.valor_compra * item.quantidade;   // Receita gerada pela venda do produto
+        const custo = item.valor * item.quantidade; // Custo do produto
+        const lucro = receita - custo; // Lucro é a diferença entre receita e custo
+
+        receitaTotal += receita;
+        custoTotal += custo;
+        lucroTotal += lucro;
+    });
+
+    // Envia o resultado como JSON
+    res.json({
+        sucesso: true,
+        dados: {
+            receitaTotal: receitaTotal.toFixed(2),
+            custoTotal: custoTotal.toFixed(2),
+            lucroTotal: lucroTotal.toFixed(2),
+        }
+    });
+}
+
+async function calcularRelatorioPorData(req, res) {
+    const { data } = req.query; // Obtém a data a partir da query string
+
+    try {
+        const idCaixa = await servicos.buscarCaixaPorData(data); // Busca o caixa aberto na data
+
+        if (!idCaixa) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: 'Nenhum caixa aberto encontrado para esta data.'
+            });
+        }
+
+        const vendas = await servicos.buscarVendasPorCaixa(idCaixa); // Busca as vendas do caixa
+
+        if (vendas.length === 0) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: 'Nenhuma venda encontrada para este caixa.'
+            });
+        }
+
+        const resultado = await servicos.calcularReceitaCustoLucro(vendas); // Calcula receita, custo e lucro
+
+        res.json({
+            sucesso: true,
+            dados: resultado
+        });
+    } catch (error) {
+        res.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro ao calcular relatório',
+            erro: error.message
+        });
+    }
+}
+
 module.exports = {
-    relatorioVendasData,
-    relatorioVendasCaixa,
+    //relatorioVendasData,
+    //relatorioVendasCaixa,
     AtualizarEstoque,
     buscarEstoque,
-    abrirCaixa,
     login,
     confirmarVenda,
     insertUser,
@@ -213,5 +278,7 @@ module.exports = {
     buscarProduto,
     abrirCaixaController,
     fecharCaixaController,
-    verificarCaixaAbertoController
+    verificarCaixaAbertoController,
+    exibirResultados,
+    calcularRelatorioPorData
 };

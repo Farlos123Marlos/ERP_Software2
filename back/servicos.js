@@ -343,6 +343,7 @@ function verificarCaixaAberto() {
     const caixaAberto = stmt.get();
     return caixaAberto; // Retorna o caixa aberto, se existir
 }
+
 function formatarData(data) {
     const options = {
         year: 'numeric',
@@ -357,7 +358,7 @@ function formatarData(data) {
 }
 
 // Função para obter o relatório de vendas por data
-function obterRelatorioPorData(dataInicial, dataFinal) {
+/*function obterRelatorioPorData(dataInicial, dataFinal) {
 
     const query = `
         SELECT 
@@ -391,12 +392,88 @@ function obterRelatorioPorCaixa(idCaixa) {
     const stmt = db.prepare(query);
     console.log("resposta dentro do idCaixa", stmt.all(idCaixa));
     return stmt.all(idCaixa);
+}*/
+
+// Função para buscar todos os itens vendidos com suas quantidades e valores
+function buscarItensVendidos() {
+    const query = `
+        SELECT iv.id_venda, iv.id_produto, iv.quantidade, p.valor_compra, p.valor
+        FROM itens_venda iv
+        JOIN produtos p ON iv.id_produto = p.id_produto;
+    `;
+    return db.prepare(query).all();
+}
+
+async function buscarCaixaPorData(data) {
+    const query = `
+        SELECT id_caixa 
+        FROM abertura_caixa 
+        WHERE DATE(data_hora_abertura) = DATE(?)
+    `;
+    try {
+        const stmt = db.prepare(query);
+        const result = stmt.get(data); // Use 'get' do statement preparado
+        return result ? result.id_caixa : null; // Retorna o id_caixa ou null se não houver caixa aberto
+    } catch (error) {
+        throw new Error('Erro ao buscar caixa por data: ' + error.message);
+    }
+}
+
+async function buscarVendasPorCaixa(idCaixa) {
+    const query = `
+        SELECT id_venda, valor_total 
+        FROM vendas 
+        WHERE id_caixa = ?
+    `;
+    try {
+        const stmt = db.prepare(query);
+        const vendas = stmt.all(idCaixa); // Use 'all' do statement preparado
+        return vendas;
+    } catch (error) {
+        throw new Error('Erro ao buscar vendas por caixa: ' + error.message);
+    }
+}
+
+
+async function calcularReceitaCustoLucro(vendas) {
+    let receitaTotal = 0;
+    let custoTotal = 0;
+
+    for (const venda of vendas) {
+        const query = `
+            SELECT iv.quantidade, p.valor_compra, p.valor 
+            FROM itens_venda iv
+            JOIN produtos p ON iv.id_produto = p.id_produto
+            WHERE iv.id_venda = ?
+        `;
+
+        try {
+            const stmt = db.prepare(query);
+            const itens = stmt.all(venda.id_venda);
+            //const itens = await db.all(query, [venda.id_venda]); // Busca todos os itens vendidos nessa venda
+
+            // Para cada item, calculamos a receita e o custo
+            for (const item of itens) {
+                receitaTotal += item.quantidade * item.valor_compra; // Calcula a receita
+                custoTotal += item.quantidade * item.valor; // Calcula o custo
+            }
+        } catch (error) {
+            throw new Error('Erro ao buscar itens vendidos: ' + error.message);
+        }
+    }
+
+    const lucroTotal = receitaTotal - custoTotal; // Calcula o lucro
+    return {
+        receitaTotal: receitaTotal.toFixed(2),
+        custoTotal: custoTotal.toFixed(2),
+        lucroTotal: lucroTotal.toFixed(2)
+    };
 }
 
 module.exports = {
     initializeDatabase,
-    obterRelatorioPorCaixa,
-    obterRelatorioPorData,
+    //obterRelatorioPorCaixa,
+    //obterRelatorioPorData,
     insertUser,
     abrirCaixa,
     fecharCaixa,
@@ -409,5 +486,9 @@ module.exports = {
     loginUser,
     adicionarAoEstoque,
     buscarProduto,
-    verificarCaixaAberto
+    verificarCaixaAberto,
+    buscarItensVendidos,
+    buscarCaixaPorData,
+    buscarVendasPorCaixa,
+    calcularReceitaCustoLucro
 };

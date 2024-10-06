@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './RelatorioVenda.css';
 
 const RelatorioVenda = () => {
@@ -6,8 +6,9 @@ const RelatorioVenda = () => {
   const [dataFinal, setDataFinal] = useState('');
   const [idCaixa, setIdCaixa] = useState('');
   const [relatorio, setRelatorio] = useState([]);
+  const [dataSelecionada, setDataSelecionada] = useState('');
 
-  const buscarRelatorioPorData = async () => {
+  /*const buscarRelatorioPorData = async () => {
     try {
       const response = await fetch(`http://localhost:3001/relatorioPorData?dataInicial=${dataInicial}&dataFinal=${dataFinal}`);
       const result = await response.json();
@@ -25,7 +26,45 @@ const RelatorioVenda = () => {
     } catch (error) {
       console.error('Erro ao buscar relatório por caixa:', error);
     }
+  };*/
+  const exibirResultados = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/relatorioTotal');
+      const result = await response.json(); // Certifique-se de converter a resposta para JSON
+      console.log(result); // Verifica o conteúdo completo da resposta
+      setRelatorio(result.dados); // Acessa a chave "dados" da resposta
+    } catch (error) {
+      console.error('Erro ao buscar relatório:', error);
+    }
   };
+
+  const exibirResultadosPorData = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/porData?data=${dataSelecionada}`);
+      
+      if (!response.ok) {
+        throw new Error(`Erro na resposta: ${response.statusText}`);
+      }
+      
+      const result = await response.json(); // Converte a resposta para JSON
+      console.log(result); // Verifica o conteúdo completo da resposta
+      
+      if (result.sucesso) {
+        setRelatorio(result.dados); // Acessa a chave "dados" da resposta
+      } else {
+        console.error('Erro na resposta da API:', result);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar relatório:', error);
+    }
+  };
+  
+
+
+  // useEffect que será executado quando a página for carregada
+  useEffect(() => {
+    exibirResultados();
+  }, []); 
 
   return (
     <div className="relatorio-container">
@@ -33,66 +72,43 @@ const RelatorioVenda = () => {
         <h2>Relatório de Vendas</h2>
       </div>
 
-      {/* Filtrar por datas */}
-      <div className="filtro-datas">
-        <h3>Filtrar por datas:</h3>
-        <label>Data Inicial:</label>
-        <input
-          type="date"
-          value={dataInicial}
-          onChange={(e) => setDataInicial(e.target.value)}
+      {/* Seletor de data */}
+      <div className="relatorio-seletor-data">
+        <label htmlFor="data">Escolha uma data: </label>
+        <input 
+          type="date" 
+          id="data" 
+          value={dataSelecionada} 
+          onChange={(e) => setDataSelecionada(e.target.value)} 
         />
-        <label>Data Final:</label>
-        <input
-          type="date"
-          value={dataFinal}
-          onChange={(e) => setDataFinal(e.target.value)}
-        />
-        <button className="relatorio-export" onClick={buscarRelatorioPorData}>
-          Buscar Relatório por Datas
-        </button>
+        <button onClick={exibirResultadosPorData}>Exibir Relatório por Data</button>
       </div>
-
-      {/* Filtrar por abertura de caixa */}
-      <div className="filtro-caixa">
-        <h3>Filtrar por Abertura de Caixa:</h3>
-        <label>ID do Caixa:</label>
-        <input
-          type="number"
-          value={idCaixa}
-          onChange={(e) => setIdCaixa(e.target.value)}
-        />
-        <button className="relatorio-export" onClick={buscarRelatorioPorCaixa}>
-          Buscar Relatório por Caixa
-        </button>
-      </div>
+      <button onClick={exibirResultados}>Exibir Relatório Total</button>
 
       {/* Exibir relatório */}
       <div className="relatorio-tabela-container">
-        <h3>Resultados do Relatório:</h3>
+        <h3>Dados Totais:</h3>
         <table className="relatorio-tabela">
           <thead>
             <tr>
-              <th>ID Venda</th>
-              <th>Data/Hora</th>
-              <th>Total</th>
-              <th>ID Caixa</th>
+              <th>Receita</th>
+              <th>Custo</th>
+              <th>Lucro</th>
             </tr>
           </thead>
           <tbody>
-            {relatorio.map((venda) => (
-              <tr key={venda.id_venda}>
-                <td>{venda.id_venda}</td>
-                <td>{new Date(venda.data_hora_venda).toLocaleString()}</td>
-                <td>R$ {venda.valor_total.toFixed(2)}</td>
-                <td>{venda.id_caixa}</td>
+            {relatorio && (
+              <tr>
+                <td>R$ {relatorio.receitaTotal}</td>
+                <td>R$ {relatorio.custoTotal}</td>
+                <td>R$ {relatorio.lucroTotal}</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
     </div>
-  );
+  );  
 };
 
 export default RelatorioVenda;
