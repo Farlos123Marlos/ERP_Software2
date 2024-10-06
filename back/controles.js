@@ -1,5 +1,5 @@
 const servicos = require('./servicos');
-//const { printReceipt } = require('./Imp.js');
+const { printReceipt } = require('./Imp.js');
 
 
 // Relatório de vendas por data
@@ -99,7 +99,8 @@ function confirmarVenda(req,res){
         //console.log("2entrou em confirmar no Controler, produtos:", produto);
         //servicos.pagamentoVendas(Venda.lastInsertRowid, pagamentos);
         const impressora = 'POS-80C (copy 1)';
-        //printReceipt(impressora, produto);
+        console.log(impressora, produto);
+        printReceipt(impressora, produto);
         return res.status(201).json({message:'Venda confirmada.'});
 
     }catch (error){

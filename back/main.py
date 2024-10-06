@@ -18,11 +18,11 @@ def format_item(name, qty, price):
 # Comandos ESC/POS para inicializar o recibo
 command = b'\x1B\x40'  # Inicializa a impressora (ESC @)
 command += b'\x1B\x21\x08'  # Texto em negrito
-command += b'    MERCADO DO BAIRRO\n'
+command += b'EMPORIO GABAS\n'
 command += b'\x1B\x21\x00'  # Texto normal
-command += b'Rua Exemplo, 123\n'
-command += b'Tel: (11) 1234-5678\n'
-command += b'CNPJ: 12.345.678/0001-99\n'
+command += b'Rua Valdomiro Machado, 500-Pq. Ribeirao Preto\n'
+command += b'Tel: (16) 988477223\n'
+command += b'CNPJ: 216336270001-50\n'
 command += b'------------------------------------------------\n'
 
 # Lendo itens do stdin (recebido via JSON do Node.js)
