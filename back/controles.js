@@ -1,5 +1,5 @@
 const servicos = require('./servicos');
-const { printReceipt } = require('./Imp.js');
+//const { printReceipt } = require('./Imp.js');
 
 
 // Relatório de vendas por data
@@ -102,7 +102,7 @@ function confirmarVenda(req,res){
         //console.log("2entrou em confirmar no Controler, produtos:", produto);
         //servicos.pagamentoVendas(Venda.lastInsertRowid, pagamentos);
         const impressora = 'POS-80C (copy 1)';
-        printReceipt(impressora, produto);
+        //printReceipt(impressora, produto);
         return res.status(201).json({message:'Venda confirmada.'});
 
     }catch (error){
@@ -166,20 +166,37 @@ function abrirCaixaController(req, res) {
 }
 
 // Controlador para fechar o caixa
-function fecharCaixaController(req, res) {
+async function fecharCaixaController(req, res) {
     const { id_caixa, valor_final } = req.body;
-    console.log("Rodando fechar caixa");
-    console.log(id_caixa, valor_final);
-
+    const cAberto = servicos.verificarCaixaAberto();
+    
+    console.log("VALOR INICIAL DO CAIXA",cAberto.valor_inicial );
     try {
-        const success = servicos.fecharCaixa(id_caixa, valor_final);
+   
+        const totalDinheiro = servicos.obterTotalPagamentosEmDinheiro(id_caixa);     // Obtendo o total de pagamentos em dinheiro para o caixa
+        const valorTotal = parseFloat(totalDinheiro) + cAberto.valor_inicial;
+
+        console.log("TOTAL EM DINHEIRO", valorTotal);
+      
+        const confirmacao = req.body.confirmacao; // Enviado do frontend , Confirmar se o usuário deseja realmente fechar o caixa
+
+        if (!confirmacao) {
+            return res.status(200).json({ confirmacaoRequerida: true, totalDinheiro, valorTotal });
+        }
+
+        if(valor_final!=valorTotal){
+            console.log("VAlores discrepantes");
+            const success = servicos.fecharCaixa(id_caixa, valor_final);// Fechar o caixa se houver confirmação
+        }else{
+            const success = servicos.fecharCaixa(id_caixa, valorTotal);// Fechar o caixa se houver confirmação
+        } 
+        
         if (success) {
-            res.status(200).json({ success: true, message: 'Caixa encerrado com sucesso' });
+            res.status(200).json({ success: true, message: 'Caixa encerrado com sucesso', valorTotal });
         } else {
-            res.status(400).json({ success: false, message: 'Erro ao encerrar o caixa. Verifique se o caixa está aberto.' });
+            res.status(400).json({ success: false, message: 'Erro ao encerrar o caixa.' });
         }
     } catch (error) {
-        console.error("Erro ao encerrar o caixa:", error);
         res.status(500).json({ success: false, message: 'Erro ao encerrar o caixa', error });
     }
 }
