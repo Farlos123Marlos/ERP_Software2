@@ -73,7 +73,7 @@ const AbrirCaixa = () => {
         const data = await response.json();
         console.log("OS dados sao:",data );
         if (data.confirmacaoRequerida) {
-            const confirmar = window.confirm(`O total de pagamentos em dinheiro foi R$${data.totalDinheiro}. O valor total de fechamento será R$${data.valorTotal}. Deseja confirmar o fechamento?`);
+            const confirmar = window.confirm(`O total de pagamentos em dinheiro foi R$${data.totalDinheiro}. O valor total de abertura foi R$${valorInicial}. O valor total de fechamento será R$${valorEncerramento}. Deseja confirmar o fechamento?`);
             if (confirmar) {
                 // Se o usuário confirmar, enviar a confirmação
                 await fetch('http://localhost:3001/fecharCaixa', {
