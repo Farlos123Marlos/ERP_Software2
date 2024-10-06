@@ -220,6 +220,7 @@ async function fecharCaixaController(req, res) {
         } const success = servicos.fecharCaixa(id_caixa, valorTotal);// Fechar o caixa se houver confirmação
         
         if (success) {
+            //calcularRelatorioPorIdDeCaixa(id_caixa);
             res.status(200).json({ success: true, message: 'Caixa encerrado com sucesso', valorTotal });
         } else {
             res.status(400).json({ success: false, message: 'Erro ao encerrar o caixa.' });
@@ -326,10 +327,61 @@ async function calcularRelatorioPorIntervaloDeDatas(req, res) {
     }
 }
 
+async function calcularRelatorioPorIdDeCaixa(idCaixa) {
+     
+
+    if (!idCaixa) {
+        return res.status(400).json({
+            sucesso: false,
+            mensagem: 'Por favor, forneça o ID do caixa.'
+        });
+    }
+
+    try {
+        // Busca as vendas do caixa pelo ID
+        const vendas = await servicos.buscarVendasPorCaixa(idCaixa);
+
+        if (vendas.length === 0) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: 'Nenhuma venda encontrada para o caixa fornecido.'
+            });
+        }
+
+        // Calcula receita, custo e lucro com base nas vendas encontradas
+        const resultado = await servicos.calcularReceitaCustoLucro(vendas);
+
+        // Importa o módulo de impressão de relatório
+        const ImpCaixa = require('./ImpCaixa');
+
+        // Obtém a data do caixa
+        const dataCaixa = await servicos.buscarDataCaixa(idCaixa);
+
+        // Imprime o relatório com receita, custo, lucro e a data do caixa
+        ImpCaixa.imprimirRelatorio({
+            receita: resultado.receita,
+            custo: resultado.custo,
+            lucro: resultado.lucro,
+            data: dataCaixa
+        });
+
+        // Retorna sucesso
+        res.json({
+            sucesso: true,
+            mensagem: 'Relatório gerado e enviado para impressão.',
+            dados: resultado
+        });
+    } catch (error) {
+        // Retorna uma resposta de erro em caso de falha
+        res.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro ao gerar o relatório',
+            erro: error.message
+        });
+    }
+}
 
 module.exports = {
-    //relatorioVendasData,
-    //relatorioVendasCaixa,
     AtualizarEstoque,
     atualizarProduto,
     buscarEstoque,
@@ -342,5 +394,6 @@ module.exports = {
     fecharCaixaController,
     verificarCaixaAbertoController,
     exibirResultados,
-    calcularRelatorioPorIntervaloDeDatas
+    calcularRelatorioPorIntervaloDeDatas,
+    calcularRelatorioPorIdDeCaixa
 };

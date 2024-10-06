@@ -301,7 +301,7 @@ function buscarEstoque(busca = '') {
 
 function loginUser(login, senha) {
     // Busca o usuário pelo login
-    insertUser("kauan","123");
+    //insertUser("kauan","123");
     //console.log("inseriu?");
     const usuario = db.prepare('SELECT id_usuario, senha_hash FROM usuarios WHERE login = ?').get(login);
     console.log(senha);
@@ -463,16 +463,43 @@ function atualizarProduto(idProduto, nome, valor_compra, valor, descricao) {
     return stmt.run(nome, valor_compra, valor, descricao, idProduto);
   }
 
+  // Função para buscar vendas de um caixa específico
+function buscarVendasPorCaixa(idCaixa) {
+    const query = `
+        SELECT * 
+        FROM vendas 
+        WHERE id_caixa = ?;
+    `;
+    
+    try {
+        const stmt = db.prepare(query);
+        const vendas = stmt.all(idCaixa);
+        return vendas; // Retorna a lista de vendas associadas ao caixa
+    } catch (error) {
+        throw new Error('Erro ao buscar vendas do caixa: ' + error.message);
+    }
+}
+
+// Função para buscar a data de abertura de um caixa específico
+function buscarDataCaixa(idCaixa) {
+    const query = `
+        SELECT data_hora_abertura 
+        FROM abertura_caixa 
+        WHERE id_caixa = ?;
+    `;
+    
+    try {
+        const stmt = db.prepare(query);
+        const result = stmt.get(idCaixa); // Obtém a data de abertura do caixa
+        return result ? result.data_hora_abertura : null;
+    } catch (error) {
+        throw new Error('Erro ao buscar data do caixa: ' + error.message);
+    }
+}
+
 module.exports = {
     initializeDatabase,
-<<<<<<< HEAD
-    obterRelatorioPorCaixa,
-    obterRelatorioPorData,
     atualizarProduto,
-=======
-    //obterRelatorioPorCaixa,
-    //obterRelatorioPorData,
->>>>>>> 6e921f561a1243117011d9b8d60cb0f0e49a2c67
     insertUser,
     abrirCaixa,
     fecharCaixa,
@@ -490,5 +517,7 @@ module.exports = {
     buscarItensVendidos,
     buscarCaixasPorIntervaloDeDatas,
     buscarVendasPorCaixas,
-    calcularReceitaCustoLucro
+    calcularReceitaCustoLucro,
+    buscarVendasPorCaixa,
+    buscarDataCaixa
 };

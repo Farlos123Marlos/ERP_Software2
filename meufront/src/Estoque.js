@@ -259,7 +259,7 @@ const Estoque = () => {
                     required
                   />
 
-                  <label>Valor de Compra:</label>
+                  <label>Valor de Venda:</label>
                   <input
                     type="number"
                     step="0.01"
@@ -268,7 +268,7 @@ const Estoque = () => {
                     required
                   />
 
-                  <label>Valor de Venda:</label>
+                  <label>Valor de Compra:</label>
                   <input
                     type="number"
                     step="0.01"
