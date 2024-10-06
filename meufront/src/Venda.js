@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Venda.css';
 
 function Venda() {
@@ -12,6 +12,7 @@ function Venda() {
     const [valorFaltante, setValorFaltante] = useState(0); // Valor ainda a ser pago
 
     const idCaixaAtual = sessionStorage.getItem('idcaixa');
+
 
     const adicionarPagamento = () => {
         if (valorPagamento > 0 && valorPagamento <= valorFaltante) {
