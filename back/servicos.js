@@ -333,6 +333,18 @@ function buscarProduto(codigoBarras) {
     return db.prepare(query).get(codigoBarras);
 }
 
+function obterTotalPagamentosEmDinheiro(idCaixa) {
+    console.log("entrou em fechar o caixaaaa", idCaixa); 
+    const query = `
+        SELECT SUM(vp.valor) as totalDinheiro
+        FROM venda_pagamentos vp
+        JOIN vendas v ON vp.id_venda = v.id_venda
+        WHERE v.id_caixa = ? AND vp.metodo_pagamento = 'dinheiro'
+    `;
+   
+    const result = db.prepare(query).get(idCaixa);
+    return result.totalDinheiro || 0;
+}
 
 // Função para verificar se há um caixa aberto
 function verificarCaixaAberto() {
@@ -477,6 +489,7 @@ module.exports = {
     insertUser,
     abrirCaixa,
     fecharCaixa,
+    obterTotalPagamentosEmDinheiro,
     confirmarVendas,
     adicionarItemVenda,
     pagamentoVendas,
