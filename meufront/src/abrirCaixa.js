@@ -23,25 +23,17 @@ const AbrirCaixa = () => {
   };
 
   const userId = sessionStorage.getItem('userId');
-  function getCurrentDateTime() {
+  function getCurrentDate() {
     const now = new Date();
-    const options = {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false, // Para formato 24 horas
-    };
-    return now.toLocaleString('pt-BR', options); // Ajuste o locale conforme necessário
+    return now.toISOString().split('T')[0]; // Retorna apenas a parte da data no formato YYYY-MM-DD
 }
+
 
   // Função para abrir um novo caixa
   const abrirCaixa = async () => {
     const dados ={
         "id_usuario": userId,
-        "data_hora_abertura": getCurrentDateTime(),
+        "data_hora_abertura": getCurrentDate(),
         "valor_inicial":valorInicial
     }
     console.log(dados);
@@ -81,7 +73,7 @@ const AbrirCaixa = () => {
         const data = await response.json();
         console.log("OS dados sao:",data );
         if (data.confirmacaoRequerida) {
-            const confirmar = window.confirm(`O total de pagamentos em dinheiro foi R$${data.totalDinheiro}. O valor total de fechamento será R$${data.valorTotal}. Deseja confirmar o fechamento?`);
+            const confirmar = window.confirm(`O total de pagamentos em dinheiro foi R$${data.totalDinheiro}. O valor total de abertura foi R$${valorInicial}. O valor total de fechamento será R$${valorEncerramento}. Deseja confirmar o fechamento?`);
             if (confirmar) {
                 // Se o usuário confirmar, enviar a confirmação
                 await fetch('http://localhost:3001/fecharCaixa', {

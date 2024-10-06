@@ -361,6 +361,7 @@ function verificarCaixaAberto() {
     const caixaAberto = stmt.get();
     return caixaAberto; // Retorna o caixa aberto, se existir
 }
+
 function formatarData(data) {
     const options = {
         year: 'numeric',
@@ -374,41 +375,82 @@ function formatarData(data) {
     return new Date(data).toLocaleString('en-GB', options);
 }
 
-// Função para obter o relatório de vendas por data
-function obterRelatorioPorData(dataInicial, dataFinal) {
 
+// Função para buscar todos os itens vendidos com suas quantidades e valores
+function buscarItensVendidos() {
     const query = `
-        SELECT 
-            vendas.id_venda, 
-            vendas.data_hora_venda, 
-            vendas.valor_total, 
-            vendas.id_caixa
-        FROM vendas
-        WHERE vendas.data_hora_venda BETWEEN ? AND  ?
+        SELECT iv.id_venda, iv.id_produto, iv.quantidade, p.valor_compra, p.valor
+        FROM itens_venda iv
+        JOIN produtos p ON iv.id_produto = p.id_produto;
     `;
-    const stmt = db.prepare(query);
-    const dataF = formatarData(dataFinal); // Deve retornar 'YYYY-MM-DD HH:MM:SS'
-    const dataI = formatarData(dataInicial);//formatarData(dataInicial);
-    console.log("entrou em relatoio por data", dataF,dataI);
-    console.log("Hora atual", getCurrentDateTime());
-    console.log("relatorio venda: ",stmt.all(dataI,dataF));
-    return stmt.all(dataI, dataF);
+    return db.prepare(query).all();
 }
 
-// Função para obter o relatório de vendas por caixa
-function obterRelatorioPorCaixa(idCaixa) {
+async function buscarCaixasPorIntervaloDeDatas(dataInicio, dataFim) {
     const query = `
-        SELECT 
-            vendas.id_venda, 
-            vendas.data_hora_venda, 
-            vendas.valor_total, 
-            vendas.id_caixa
-        FROM vendas
-        WHERE vendas.id_caixa = ?
+        SELECT id_caixa 
+        FROM abertura_caixa 
+        WHERE DATE(data_hora_abertura) BETWEEN DATE(?) AND DATE(?)
     `;
-    const stmt = db.prepare(query);
-    console.log("resposta dentro do idCaixa", stmt.all(idCaixa));
-    return stmt.all(idCaixa);
+    try {
+        const stmt = db.prepare(query);
+        const result = stmt.all(dataInicio, dataFim); // Use 'all' para obter todos os registros
+        return result.map(row => row.id_caixa); // Retorna uma lista com todos os ids de caixas
+    } catch (error) {
+        throw new Error('Erro ao buscar caixas no intervalo de datas: ' + error.message);
+    }
+}
+
+async function buscarVendasPorCaixas(idsCaixas) {
+    const query = `
+        SELECT id_venda, valor_total, id_caixa 
+        FROM vendas 
+        WHERE id_caixa IN (${idsCaixas.map(() => '?').join(', ')})
+    `;
+    try {
+        const stmt = db.prepare(query);
+        const vendas = stmt.all(...idsCaixas); // Passa os ids de caixas como argumentos
+        return vendas;
+    } catch (error) {
+        throw new Error('Erro ao buscar vendas por caixas: ' + error.message);
+    }
+}
+
+
+
+async function calcularReceitaCustoLucro(vendas) {
+    let receitaTotal = 0;
+    let custoTotal = 0;
+
+    for (const venda of vendas) {
+        const query = `
+            SELECT iv.quantidade, p.valor_compra, p.valor 
+            FROM itens_venda iv
+            JOIN produtos p ON iv.id_produto = p.id_produto
+            WHERE iv.id_venda = ?
+        `;
+
+        try {
+            const stmt = db.prepare(query);
+            const itens = stmt.all(venda.id_venda);
+            //const itens = await db.all(query, [venda.id_venda]); // Busca todos os itens vendidos nessa venda
+
+            // Para cada item, calculamos a receita e o custo
+            for (const item of itens) {
+                receitaTotal += item.quantidade * item.valor_compra; // Calcula a receita
+                custoTotal += item.quantidade * item.valor; // Calcula o custo
+            }
+        } catch (error) {
+            throw new Error('Erro ao buscar itens vendidos: ' + error.message);
+        }
+    }
+
+    const lucroTotal = receitaTotal - custoTotal; // Calcula o lucro
+    return {
+        receitaTotal: receitaTotal.toFixed(2),
+        custoTotal: custoTotal.toFixed(2),
+        lucroTotal: lucroTotal.toFixed(2)
+    };
 }
 // Função para atualizar os dados de um produto
 function atualizarProduto(idProduto, nome, valor_compra, valor, descricao) {
@@ -423,9 +465,14 @@ function atualizarProduto(idProduto, nome, valor_compra, valor, descricao) {
 
 module.exports = {
     initializeDatabase,
+<<<<<<< HEAD
     obterRelatorioPorCaixa,
     obterRelatorioPorData,
     atualizarProduto,
+=======
+    //obterRelatorioPorCaixa,
+    //obterRelatorioPorData,
+>>>>>>> 6e921f561a1243117011d9b8d60cb0f0e49a2c67
     insertUser,
     abrirCaixa,
     fecharCaixa,
@@ -439,5 +486,9 @@ module.exports = {
     loginUser,
     adicionarAoEstoque,
     buscarProduto,
-    verificarCaixaAberto
+    verificarCaixaAberto,
+    buscarItensVendidos,
+    buscarCaixasPorIntervaloDeDatas,
+    buscarVendasPorCaixas,
+    calcularReceitaCustoLucro
 };

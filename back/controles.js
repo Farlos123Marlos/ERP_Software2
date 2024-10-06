@@ -3,7 +3,7 @@ const servicos = require('./servicos');
 
 
 // Relatório de vendas por data
-function relatorioVendasData(req, res) {
+/*function relatorioVendasData(req, res) {
     const { dataInicial, dataFinal } = req.query;
 
     try {
@@ -24,7 +24,7 @@ function relatorioVendasCaixa(req, res) {
     } catch (error) {
         res.status(500).json({ error: 'Erro ao buscar relatório de vendas por caixa' });
     }
-}
+}*/
 
 // Controle para inserir usuário
 function AtualizarEstoque(req, res) {
@@ -73,9 +73,6 @@ function buscarEstoque(req, res) {
     }
 }
 
-function abrirCaixa(req, res){
-//rdwefasfw
-}
 
 function login(req, res) {
     const { login, senha_hash } = req.body;
@@ -248,13 +245,94 @@ function verificarCaixaAbertoController(req, res) {
     }
 }
 
+function exibirResultados(req, res) {
+    // Busca todos os itens vendidos usando o serviço
+    console.log('Rodando Exibir Resultados');
+    const itensVendidos = servicos.buscarItensVendidos();
+
+    // Inicializando variáveis para receita, custo e lucro
+    let receitaTotal = 0;
+    let custoTotal = 0;
+    let lucroTotal = 0;
+
+    // Percorrendo os itens vendidos para calcular receita, custo e lucro
+    itensVendidos.forEach(item => {
+        const receita = item.valor_compra * item.quantidade;   // Receita gerada pela venda do produto
+        const custo = item.valor * item.quantidade; // Custo do produto
+        const lucro = receita - custo; // Lucro é a diferença entre receita e custo
+
+        receitaTotal += receita;
+        custoTotal += custo;
+        lucroTotal += lucro;
+    });
+
+    // Envia o resultado como JSON
+    res.json({
+        sucesso: true,
+        dados: {
+            receitaTotal: receitaTotal.toFixed(2),
+            custoTotal: custoTotal.toFixed(2),
+            lucroTotal: lucroTotal.toFixed(2),
+        }
+    });
+}
+
+async function calcularRelatorioPorIntervaloDeDatas(req, res) {
+    const { dataInicio, dataFim } = req.query; // Obtém as datas de início e fim a partir da query string
+
+    if (!dataInicio || !dataFim) {
+        return res.status(400).json({
+            sucesso: false,
+            mensagem: 'Por favor, forneça as datas de início e fim.'
+        });
+    }
+
+    try {
+        // Busca os caixas abertos no intervalo de datas
+        const idsCaixas = await servicos.buscarCaixasPorIntervaloDeDatas(dataInicio, dataFim);
+
+        if (idsCaixas.length === 0) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: 'Nenhum caixa aberto encontrado no intervalo de datas fornecido.'
+            });
+        }
+
+        // Busca as vendas dos caixas encontrados
+        const vendas = await servicos.buscarVendasPorCaixas(idsCaixas);
+
+        if (vendas.length === 0) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: 'Nenhuma venda encontrada para os caixas no intervalo de datas fornecido.'
+            });
+        }
+
+        // Calcula receita, custo e lucro com base nas vendas encontradas
+        const resultado = await servicos.calcularReceitaCustoLucro(vendas);
+
+        // Retorna o relatório no formato esperado
+        res.json({
+            sucesso: true,
+            dados: resultado
+        });
+    } catch (error) {
+        // Retorna uma resposta de erro em caso de falha
+        res.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro ao calcular relatório',
+            erro: error.message
+        });
+    }
+}
+
+
 module.exports = {
-    relatorioVendasData,
-    relatorioVendasCaixa,
+    //relatorioVendasData,
+    //relatorioVendasCaixa,
     AtualizarEstoque,
     atualizarProduto,
     buscarEstoque,
-    abrirCaixa,
     login,
     confirmarVenda,
     insertUser,
@@ -262,5 +340,7 @@ module.exports = {
     buscarProduto,
     abrirCaixaController,
     fecharCaixaController,
-    verificarCaixaAbertoController
+    verificarCaixaAbertoController,
+    exibirResultados,
+    calcularRelatorioPorIntervaloDeDatas
 };

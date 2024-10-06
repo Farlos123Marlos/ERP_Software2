@@ -15,19 +15,16 @@ router.get('/caixa-aberto', controles.verificarCaixaAbertoController);
 
 // Rota de produto e venda
 router.get('/buscaProduto', controles.buscarProduto);
-
-// Rotas abrir caixa
-router.post('/abrirCaixa', controles.abrirCaixa);
-
-//confirmar venbda
 router.post('/confirmarVenda', controles.confirmarVenda)
 
 // Rotas de usuario
 router.post('/login', controles.login);
 router.post('/newUser', controles.insertUser);
 
-//relatorio de vendas
-router.get('/relatorioPorData', controles.relatorioVendasData);
-router.get('/relatorioPorCaixa', controles.relatorioVendasCaixa);
+// Rotas de relatorio
+/*router.get('/relatorioPorData', controles.relatorioVendasData);
+router.get('/relatorioPorCaixa', controles.relatorioVendasCaixa);*/
+router.get('/relatorioTotal', controles.exibirResultados);
+router.get('/porData', controles.calcularRelatorioPorIntervaloDeDatas);
 
 module.exports = router;
