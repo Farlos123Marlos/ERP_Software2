@@ -366,11 +366,11 @@ function obterRelatorioPorData(dataInicial, dataFinal) {
             vendas.valor_total, 
             vendas.id_caixa
         FROM vendas
-        WHERE vendas.data_hora_venda BETWEEN (?) AND  (?)
+        WHERE vendas.data_hora_venda BETWEEN ? AND  ?
     `;
     const stmt = db.prepare(query);
-   const dataF ='04/10/2024, 21:42:09'; //formatarData(dataFinal);
-   const dataI ='06/10/2024, 21:42:09';//formatarData(dataInicial);
+    const dataF = formatarData(dataFinal); // Deve retornar 'YYYY-MM-DD HH:MM:SS'
+    const dataI = formatarData(dataInicial);//formatarData(dataInicial);
     console.log("entrou em relatoio por data", dataF,dataI);
     console.log("Hora atual", getCurrentDateTime());
     console.log("relatorio venda: ",stmt.all(dataI,dataF));
