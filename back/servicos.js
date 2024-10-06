@@ -158,7 +158,7 @@ function fecharCaixa(id_caixa, valor_final) {
 
 function confirmarVendas(id_caixa, valor_total) {
         console.log("aaaaaaaaaaaa", id_caixa, valor_total);
-        const data_hora_venda = getCurrentDateTime() // Pega a data e hora atual no formato ISO
+        const data_hora_venda = getCurrentDateTime(); // Pega a data e hora atual no formato ISO
         //console.log("DATA E HORA", data_hora_venda);
         const stmt = db.prepare(`
             INSERT INTO vendas (id_caixa, data_hora_venda, valor_total) 
@@ -343,9 +343,60 @@ function verificarCaixaAberto() {
     const caixaAberto = stmt.get();
     return caixaAberto; // Retorna o caixa aberto, se existir
 }
+function formatarData(data) {
+    const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false // Formato 24 horas
+    };
+    return new Date(data).toLocaleString('en-GB', options);
+}
+
+// Função para obter o relatório de vendas por data
+function obterRelatorioPorData(dataInicial, dataFinal) {
+
+    const query = `
+        SELECT 
+            vendas.id_venda, 
+            vendas.data_hora_venda, 
+            vendas.valor_total, 
+            vendas.id_caixa
+        FROM vendas
+        WHERE vendas.data_hora_venda BETWEEN (?) AND  (?)
+    `;
+    const stmt = db.prepare(query);
+   const dataF ='04/10/2024, 21:42:09'; //formatarData(dataFinal);
+   const dataI ='06/10/2024, 21:42:09';//formatarData(dataInicial);
+    console.log("entrou em relatoio por data", dataF,dataI);
+    console.log("Hora atual", getCurrentDateTime());
+    console.log("relatorio venda: ",stmt.all(dataI,dataF));
+    return stmt.all(dataI, dataF);
+}
+
+// Função para obter o relatório de vendas por caixa
+function obterRelatorioPorCaixa(idCaixa) {
+    const query = `
+        SELECT 
+            vendas.id_venda, 
+            vendas.data_hora_venda, 
+            vendas.valor_total, 
+            vendas.id_caixa
+        FROM vendas
+        WHERE vendas.id_caixa = ?
+    `;
+    const stmt = db.prepare(query);
+    console.log("resposta dentro do idCaixa", stmt.all(idCaixa));
+    return stmt.all(idCaixa);
+}
 
 module.exports = {
     initializeDatabase,
+    obterRelatorioPorCaixa,
+    obterRelatorioPorData,
     insertUser,
     abrirCaixa,
     fecharCaixa,

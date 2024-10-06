@@ -26,4 +26,8 @@ router.post('/confirmarVenda', controles.confirmarVenda)
 router.post('/login', controles.login);
 router.post('/newUser', controles.insertUser);
 
+//relatorio de vendas
+router.get('/relatorioPorData', controles.relatorioVendasData);
+router.get('/relatorioPorCaixa', controles.relatorioVendasCaixa);
+
 module.exports = router;

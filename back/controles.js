@@ -1,5 +1,30 @@
 const servicos = require('./servicos');
 
+
+// Relatório de vendas por data
+function relatorioVendasData(req, res) {
+    const { dataInicial, dataFinal } = req.query;
+
+    try {
+        const relatorio = servicos.obterRelatorioPorData(dataInicial, dataFinal);
+        res.status(200).json(relatorio);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar relatório de vendas por data' });
+    }
+}
+
+// Relatório de vendas por caixa
+function relatorioVendasCaixa(req, res) {
+    const { idCaixa } = req.query;
+
+    try {
+        const relatorio = servicos.obterRelatorioPorCaixa(idCaixa);
+        res.status(200).json(relatorio);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar relatório de vendas por caixa' });
+    }
+}
+
 // Controle para inserir usuário
 function AtualizarEstoque(req, res) {
     const { nomeProduto, valorDe, valor,  codigoBarras, qtd } = req.body;
@@ -173,6 +198,8 @@ function verificarCaixaAbertoController(req, res) {
 }
 
 module.exports = {
+    relatorioVendasData,
+    relatorioVendasCaixa,
     AtualizarEstoque,
     buscarEstoque,
     abrirCaixa,
