@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './RelatorioVenda.css';
 
 const RelatorioVenda = () => {
   const [dataInicial, setDataInicial] = useState('');
@@ -27,11 +28,13 @@ const RelatorioVenda = () => {
   };
 
   return (
-    <div>
-      <h2>Relatório de Vendas</h2>
+    <div className="relatorio-container">
+      <div className="relatorio-header">
+        <h2>Relatório de Vendas</h2>
+      </div>
 
       {/* Filtrar por datas */}
-      <div>
+      <div className="filtro-datas">
         <h3>Filtrar por datas:</h3>
         <label>Data Inicial:</label>
         <input
@@ -45,13 +48,13 @@ const RelatorioVenda = () => {
           value={dataFinal}
           onChange={(e) => setDataFinal(e.target.value)}
         />
-        <button onClick={buscarRelatorioPorData}>Buscar Relatório por Datas</button>
+        <button className="relatorio-export" onClick={buscarRelatorioPorData}>
+          Buscar Relatório por Datas
+        </button>
       </div>
 
-      <hr />
-
       {/* Filtrar por abertura de caixa */}
-      <div>
+      <div className="filtro-caixa">
         <h3>Filtrar por Abertura de Caixa:</h3>
         <label>ID do Caixa:</label>
         <input
@@ -59,36 +62,37 @@ const RelatorioVenda = () => {
           value={idCaixa}
           onChange={(e) => setIdCaixa(e.target.value)}
         />
-        <button onClick={buscarRelatorioPorCaixa}>Buscar Relatório por Caixa</button>
+        <button className="relatorio-export" onClick={buscarRelatorioPorCaixa}>
+          Buscar Relatório por Caixa
+        </button>
       </div>
 
-      <hr />
-
       {/* Exibir relatório */}
-      <h3>Resultados do Relatório:</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>ID Venda</th>
-            <th>Data/Hora</th>
-            <th>Total</th>
-            <th>ID Caixa</th>
-          </tr>
-        </thead>
-        <tbody>
-          {relatorio.map((venda) => (
-            <tr key={venda.id_venda}>
-              <td>{venda.id_venda}</td>
-              <td>{new Date(venda.data_hora_venda).toLocaleString()}</td>
-              <td>R$ {venda.valor_total.toFixed(2)}</td>
-              <td>{venda.id_caixa}</td>
+      <div className="relatorio-tabela-container">
+        <h3>Resultados do Relatório:</h3>
+        <table className="relatorio-tabela">
+          <thead>
+            <tr>
+              <th>ID Venda</th>
+              <th>Data/Hora</th>
+              <th>Total</th>
+              <th>ID Caixa</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {relatorio.map((venda) => (
+              <tr key={venda.id_venda}>
+                <td>{venda.id_venda}</td>
+                <td>{new Date(venda.data_hora_venda).toLocaleString()}</td>
+                <td>R$ {venda.valor_total.toFixed(2)}</td>
+                <td>{venda.id_caixa}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
 export default RelatorioVenda;
-
