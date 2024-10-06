@@ -92,7 +92,7 @@ const RelatorioVenda = () => {
             <tr>
               <th>Receita</th>
               <th>Custo</th>
-              <th>Lucro</th>
+              <th>Lucro Operacional</th>
             </tr>
           </thead>
           <tbody>
