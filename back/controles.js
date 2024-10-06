@@ -67,6 +67,7 @@ function confirmarVenda(req,res){
 
     try{
        const {idCaixa, total, pagamentos,produto} = req.body;
+       //console.log("formato do produto:", produto);
         //const Venda =  servicos.confirmarVendas(idCaixa,total);//registrat a venda
         console.log("Id do caixa", idCaixa);
         servicos.adicionarItemVenda(idCaixa,total,pagamentos,produto);
