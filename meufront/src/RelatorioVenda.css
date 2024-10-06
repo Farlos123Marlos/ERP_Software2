@@ -1,0 +1,97 @@
+/* Estilo do container principal */
+.relatorio-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 20px;
+    background-color: #f9f9f9;
+    height: 100vh;
+}
+
+/* Estilo do cabeçalho */
+.relatorio-header {
+    background-color: #6e8efb;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    font-size: 24px;
+}
+
+/* Estilo dos blocos de filtros */
+.filtro-datas, .filtro-caixa {
+    background-color: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 10px; /* Aproxima os filtros e adiciona espaçamento */
+}
+
+/* Estilo dos campos de input e botões */
+input[type="date"], input[type="number"] {
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button.relatorio-export {
+    padding: 10px;
+    background-color: #6e8efb;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button.relatorio-export:hover {
+    background-color: #5a7af9;
+}
+
+/* Estilo do container da tabela */
+.relatorio-tabela-container {
+    margin-top: 20px; /* Espaço entre os filtros e a tabela */
+}
+
+/* Estilo da tabela */
+.relatorio-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.relatorio-tabela th, .relatorio-tabela td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.relatorio-tabela th {
+    background-color: #6e8efb;
+    color: white;
+    font-weight: bold;
+}
+
+.relatorio-tabela tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .relatorio-header {
+        font-size: 20px;
+    }
+
+    .relatorio-tabela th, .relatorio-tabela td {
+        padding: 8px;
+    }
+
+    button.relatorio-export {
+        width: 100%;
+        text-align: center;
+    }
+}
