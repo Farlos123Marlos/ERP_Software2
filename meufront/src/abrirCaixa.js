@@ -14,32 +14,26 @@ const AbrirCaixa = () => {
     try {
       const response = await fetch('http://localhost:3001/caixa-aberto');
       const data = await response.json();
+      console.log("dataa", data.caixa.id_caixa);
       setCaixaAberto(data.caixa || null); // Define o caixa aberto, ou null se não houver
+      sessionStorage.setItem('idcaixa', data.caixa.id_caixa || null);
     } catch (error) {
       console.error('Erro ao verificar o caixa:', error);
     }
   };
 
   const userId = sessionStorage.getItem('userId');
-  function getCurrentDateTime() {
+  function getCurrentDate() {
     const now = new Date();
-    const options = {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false, // Para formato 24 horas
-    };
-    return now.toLocaleString('pt-BR', options); // Ajuste o locale conforme necessário
+    return now.toISOString().split('T')[0]; // Retorna apenas a parte da data no formato YYYY-MM-DD
 }
+
 
   // Função para abrir um novo caixa
   const abrirCaixa = async () => {
     const dados ={
         "id_usuario": userId,
-        "data_hora_abertura": getCurrentDateTime(),
+        "data_hora_abertura": getCurrentDate(),
         "valor_inicial":valorInicial
     }
     console.log(dados);
@@ -53,6 +47,7 @@ const AbrirCaixa = () => {
       });
       const data = await response.json();
       setCaixaAberto(data.caixa); // Atualiza o estado do caixa aberto
+      sessionStorage.setItem('idcaixa', data.caixa);
       verificarCaixaAberto();
     } catch (error) {
       console.error('Erro ao abrir o caixa:', error);
@@ -62,31 +57,47 @@ const AbrirCaixa = () => {
   // Função para fechar o caixa atual com valor de encerramento
   const fecharCaixa = async () => {
     const dados = {
-        "id_caixa": caixaAberto.id_caixa,
-        "valor_final": valorEncerramento
-      };
-    try {
-      const response = await fetch(`http://localhost:3001/fecharCaixa`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dados),
-      });
-      const data = await response.json(); // Captura a resposta em JSON
+        id_caixa: caixaAberto.id_caixa,
+        valor_final: valorEncerramento
+    };
 
-        if (response.ok) {
-            console.log(data.message); // Loga a mensagem de sucesso
-            setCaixaAberto(null); // Define como null após fechar o caixa
-            setValorEncerramento(''); // Limpa o campo de encerramento
-            setMostrarCampoEncerramento(false); // Oculta o campo após o fechamento
+    try {
+        const response = await fetch('http://localhost:3001/fecharCaixa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dados),
+        });
+ 
+        const data = await response.json();
+        console.log("OS dados sao:",data );
+        if (data.confirmacaoRequerida) {
+            const confirmar = window.confirm(`O total de pagamentos em dinheiro foi R$${data.totalDinheiro}. O valor total de abertura foi R$${valorInicial}. O valor total de fechamento será R$${valorEncerramento}. Deseja confirmar o fechamento?`);
+            if (confirmar) {
+                // Se o usuário confirmar, enviar a confirmação
+                await fetch('http://localhost:3001/fecharCaixa', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ...dados, confirmacao: true }),
+                });
+                alert('Caixa fechado com sucesso!');
+                setCaixaAberto(null);
+                setValorEncerramento('');
+            }
+        } else if (data.success) {
+            alert('Caixa encerrado com sucesso!');
+            setCaixaAberto(null);
+            setValorEncerramento('');
         } else {
-            console.error(data.message); // Loga a mensagem de erro se houver
+            alert('Erro ao fechar o caixa.');
         }
     } catch (error) {
         console.error('Erro ao fechar o caixa:', error);
     }
-  };
+};
 
   // UseEffect para carregar os dados ao iniciar
   useEffect(() => {

@@ -14,7 +14,14 @@
     margin-left: 80px;
     position: relative;
     top: 0;
+  
   }
+
+  .table-descricao {
+    word-wrap: break-word; /* Permite a quebra de palavras */
+    white-space: normal;   /* Permite quebras de linha normais */
+    max-width: 200px;      /* Limita a largura da coluna para que as quebras de linha sejam visíveis */
+}
   
   .cadastro {
     flex: 0 0 25px; /* Definindo uma largura fixa para o cadastro */
