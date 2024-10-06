@@ -369,42 +369,6 @@ function formatarData(data) {
     return new Date(data).toLocaleString('en-GB', options);
 }
 
-// Função para obter o relatório de vendas por data
-/*function obterRelatorioPorData(dataInicial, dataFinal) {
-
-    const query = `
-        SELECT 
-            vendas.id_venda, 
-            vendas.data_hora_venda, 
-            vendas.valor_total, 
-            vendas.id_caixa
-        FROM vendas
-        WHERE vendas.data_hora_venda BETWEEN ? AND  ?
-    `;
-    const stmt = db.prepare(query);
-    const dataF = formatarData(dataFinal); // Deve retornar 'YYYY-MM-DD HH:MM:SS'
-    const dataI = formatarData(dataInicial);//formatarData(dataInicial);
-    console.log("entrou em relatoio por data", dataF,dataI);
-    console.log("Hora atual", getCurrentDateTime());
-    console.log("relatorio venda: ",stmt.all(dataI,dataF));
-    return stmt.all(dataI, dataF);
-}
-
-// Função para obter o relatório de vendas por caixa
-function obterRelatorioPorCaixa(idCaixa) {
-    const query = `
-        SELECT 
-            vendas.id_venda, 
-            vendas.data_hora_venda, 
-            vendas.valor_total, 
-            vendas.id_caixa
-        FROM vendas
-        WHERE vendas.id_caixa = ?
-    `;
-    const stmt = db.prepare(query);
-    console.log("resposta dentro do idCaixa", stmt.all(idCaixa));
-    return stmt.all(idCaixa);
-}*/
 
 // Função para buscar todos os itens vendidos com suas quantidades e valores
 function buscarItensVendidos() {
@@ -416,35 +380,36 @@ function buscarItensVendidos() {
     return db.prepare(query).all();
 }
 
-async function buscarCaixaPorData(data) {
+async function buscarCaixasPorIntervaloDeDatas(dataInicio, dataFim) {
     const query = `
         SELECT id_caixa 
         FROM abertura_caixa 
-        WHERE DATE(data_hora_abertura) = DATE(?)
+        WHERE DATE(data_hora_abertura) BETWEEN DATE(?) AND DATE(?)
     `;
     try {
         const stmt = db.prepare(query);
-        const result = stmt.get(data); // Use 'get' do statement preparado
-        return result ? result.id_caixa : null; // Retorna o id_caixa ou null se não houver caixa aberto
+        const result = stmt.all(dataInicio, dataFim); // Use 'all' para obter todos os registros
+        return result.map(row => row.id_caixa); // Retorna uma lista com todos os ids de caixas
     } catch (error) {
-        throw new Error('Erro ao buscar caixa por data: ' + error.message);
+        throw new Error('Erro ao buscar caixas no intervalo de datas: ' + error.message);
     }
 }
 
-async function buscarVendasPorCaixa(idCaixa) {
+async function buscarVendasPorCaixas(idsCaixas) {
     const query = `
-        SELECT id_venda, valor_total 
+        SELECT id_venda, valor_total, id_caixa 
         FROM vendas 
-        WHERE id_caixa = ?
+        WHERE id_caixa IN (${idsCaixas.map(() => '?').join(', ')})
     `;
     try {
         const stmt = db.prepare(query);
-        const vendas = stmt.all(idCaixa); // Use 'all' do statement preparado
+        const vendas = stmt.all(...idsCaixas); // Passa os ids de caixas como argumentos
         return vendas;
     } catch (error) {
-        throw new Error('Erro ao buscar vendas por caixa: ' + error.message);
+        throw new Error('Erro ao buscar vendas por caixas: ' + error.message);
     }
 }
+
 
 
 async function calcularReceitaCustoLucro(vendas) {
@@ -501,7 +466,7 @@ module.exports = {
     buscarProduto,
     verificarCaixaAberto,
     buscarItensVendidos,
-    buscarCaixaPorData,
-    buscarVendasPorCaixa,
+    buscarCaixasPorIntervaloDeDatas,
+    buscarVendasPorCaixas,
     calcularReceitaCustoLucro
 };

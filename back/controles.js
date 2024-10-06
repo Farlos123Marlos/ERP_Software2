@@ -246,35 +246,47 @@ function exibirResultados(req, res) {
     });
 }
 
-async function calcularRelatorioPorData(req, res) {
-    const { data } = req.query; // Obtém a data a partir da query string
+async function calcularRelatorioPorIntervaloDeDatas(req, res) {
+    const { dataInicio, dataFim } = req.query; // Obtém as datas de início e fim a partir da query string
+
+    if (!dataInicio || !dataFim) {
+        return res.status(400).json({
+            sucesso: false,
+            mensagem: 'Por favor, forneça as datas de início e fim.'
+        });
+    }
 
     try {
-        const idCaixa = await servicos.buscarCaixaPorData(data); // Busca o caixa aberto na data
+        // Busca os caixas abertos no intervalo de datas
+        const idsCaixas = await servicos.buscarCaixasPorIntervaloDeDatas(dataInicio, dataFim);
 
-        if (!idCaixa) {
+        if (idsCaixas.length === 0) {
             return res.status(404).json({
                 sucesso: false,
-                mensagem: 'Nenhum caixa aberto encontrado para esta data.'
+                mensagem: 'Nenhum caixa aberto encontrado no intervalo de datas fornecido.'
             });
         }
 
-        const vendas = await servicos.buscarVendasPorCaixa(idCaixa); // Busca as vendas do caixa
+        // Busca as vendas dos caixas encontrados
+        const vendas = await servicos.buscarVendasPorCaixas(idsCaixas);
 
         if (vendas.length === 0) {
             return res.status(404).json({
                 sucesso: false,
-                mensagem: 'Nenhuma venda encontrada para este caixa.'
+                mensagem: 'Nenhuma venda encontrada para os caixas no intervalo de datas fornecido.'
             });
         }
 
-        const resultado = await servicos.calcularReceitaCustoLucro(vendas); // Calcula receita, custo e lucro
+        // Calcula receita, custo e lucro com base nas vendas encontradas
+        const resultado = await servicos.calcularReceitaCustoLucro(vendas);
 
+        // Retorna o relatório no formato esperado
         res.json({
             sucesso: true,
             dados: resultado
         });
     } catch (error) {
+        // Retorna uma resposta de erro em caso de falha
         res.status(500).json({
             sucesso: false,
             mensagem: 'Erro ao calcular relatório',
@@ -282,6 +294,7 @@ async function calcularRelatorioPorData(req, res) {
         });
     }
 }
+
 
 module.exports = {
     //relatorioVendasData,
@@ -297,5 +310,5 @@ module.exports = {
     fecharCaixaController,
     verificarCaixaAbertoController,
     exibirResultados,
-    calcularRelatorioPorData
+    calcularRelatorioPorIntervaloDeDatas
 };

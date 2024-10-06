@@ -6,27 +6,10 @@ const RelatorioVenda = () => {
   const [dataFinal, setDataFinal] = useState('');
   const [idCaixa, setIdCaixa] = useState('');
   const [relatorio, setRelatorio] = useState([]);
-  const [dataSelecionada, setDataSelecionada] = useState('');
+  const [dataInicio, setDataInicio] = useState(''); // Estado para a data inicial
+  const [dataFim, setDataFim] = useState(''); // Estado para a data final
 
-  /*const buscarRelatorioPorData = async () => {
-    try {
-      const response = await fetch(`http://localhost:3001/relatorioPorData?dataInicial=${dataInicial}&dataFinal=${dataFinal}`);
-      const result = await response.json();
-      setRelatorio(result);
-    } catch (error) {
-      console.error('Erro ao buscar relatório por datas:', error);
-    }
-  };
-
-  const buscarRelatorioPorCaixa = async () => {
-    try {
-      const response = await fetch(`http://localhost:3001/relatorioPorCaixa?idCaixa=${idCaixa}`);
-      const result = await response.json();
-      setRelatorio(result);
-    } catch (error) {
-      console.error('Erro ao buscar relatório por caixa:', error);
-    }
-  };*/
+  
   const exibirResultados = async () => {
     try {
       const response = await fetch('http://localhost:3001/relatorioTotal');
@@ -38,9 +21,16 @@ const RelatorioVenda = () => {
     }
   };
 
-  const exibirResultadosPorData = async () => {
+  
+  // Função atualizada para buscar relatório com intervalo de datas
+  const exibirResultadosPorIntervalo = async () => {
+    if (!dataInicio || !dataFim) {
+      console.error('Por favor, selecione ambas as datas.');
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:3001/porData?data=${dataSelecionada}`);
+      const response = await fetch(`http://localhost:3001/porIntervalo?dataInicio=${dataInicio}&dataFim=${dataFim}`);
       
       if (!response.ok) {
         throw new Error(`Erro na resposta: ${response.statusText}`);
@@ -74,14 +64,23 @@ const RelatorioVenda = () => {
 
       {/* Seletor de data */}
       <div className="relatorio-seletor-data">
-        <label htmlFor="data">Escolha uma data: </label>
+        <label htmlFor="dataInicio">Data de Início: </label>
         <input 
           type="date" 
-          id="data" 
-          value={dataSelecionada} 
-          onChange={(e) => setDataSelecionada(e.target.value)} 
+          id="dataInicio" 
+          value={dataInicio} 
+          onChange={(e) => setDataInicio(e.target.value)} 
         />
-        <button onClick={exibirResultadosPorData}>Exibir Relatório por Data</button>
+
+        <label htmlFor="dataFim">Data de Fim: </label>
+        <input 
+          type="date" 
+          id="dataFim" 
+          value={dataFim} 
+          onChange={(e) => setDataFim(e.target.value)} 
+        />
+        
+        <button onClick={exibirResultadosPorIntervalo}>Exibir Relatório por Intervalo</button>
       </div>
       <button onClick={exibirResultados}>Exibir Relatório Total</button>
 

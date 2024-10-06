@@ -25,6 +25,6 @@ router.post('/newUser', controles.insertUser);
 /*router.get('/relatorioPorData', controles.relatorioVendasData);
 router.get('/relatorioPorCaixa', controles.relatorioVendasCaixa);*/
 router.get('/relatorioTotal', controles.exibirResultados);
-router.get('/porData', controles.calcularRelatorioPorData);
+router.get('/porData', controles.calcularRelatorioPorIntervaloDeDatas);
 
 module.exports = router;
