@@ -7,10 +7,13 @@ printer_name = sys.argv[1]  # Nome da impressora passado como argumento
 
 # Função auxiliar para formatar linhas do recibo
 def format_item(name, qty, price):
+    qty = float(qty)  # Convertendo a quantidade para float, para garantir números decimais se necessário
+    price = float(price)  # Garantir que o preço seja um número decimal
     total = qty * price
-    # Definindo larguras fixas para cada coluna: nome (20), quantidade (5), preço (10) e total (10)
-    formatted_line = f"{name:<20.20}{qty:>5}{price:>10.2f}{total:>10.2f}\n"
+    # Definindo larguras fixas para cada coluna: nome (20), quantidade (8), preço (10) e total (10)
+    formatted_line = f"{name:<20.20}{qty:>8.2f}{price:>10.2f}{total:>10.2f}\n"
     return formatted_line
+
 
 # Comandos ESC/POS para inicializar o recibo
 command = b'\x1B\x40'  # Inicializa a impressora (ESC @)
@@ -20,10 +23,11 @@ command += b'\x1B\x21\x00'  # Texto normal
 command += b'Rua Exemplo, 123\n'
 command += b'Tel: (11) 1234-5678\n'
 command += b'CNPJ: 12.345.678/0001-99\n'
-command += b'----------------------------------------------\n'
+command += b'------------------------------------------------\n'
 
 # Lendo itens do stdin (recebido via JSON do Node.js)
 input_data = sys.stdin.read()
+print("Dados recebidos:", input_data)  # Adiciona essa linha para depuração
 items = json.loads(input_data)
 
 # Adicionar os itens no recibo
@@ -31,11 +35,11 @@ for item in items:
     command += format_item(item['name'], item['qty'], item['price']).encode('utf-8')
 
 # Linha final de total
-total = sum(item['qty'] * item['price'] for item in items)
-command += b'----------------------------------------------\n'
-# Alinhando o total geral com os totais individuais
+total = sum(float(item['qty']) * float(item['price']) for item in items)  # Certifique-se de que ambos são float
+command += b'------------------------------------------------\n'
 command += f"{'TOTAL GERAL:':>35}{total:>10.2f}\n".encode('utf-8')
-command += b'----------------------------------------------\n'
+command += b'------------------------------------------------\n'
+
 
 # Mensagem de agradecimento
 command += b'Obrigado pela preferencia!\n'
