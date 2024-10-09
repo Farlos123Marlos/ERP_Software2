@@ -110,7 +110,6 @@ function initializeDatabase() {
     `;
     db.exec(createRevertTrigger);
 }
-
 function getCurrentDateTime() {
     const now = new Date();
     const options = {
