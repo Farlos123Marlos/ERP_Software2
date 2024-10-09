@@ -140,6 +140,7 @@ function Venda() {
                     <label>Forma de Pagamento:</label>
                     <select value={formaPagamentoAtual} onChange={(e) => setFormaPagamentoAtual(e.target.value)}>
                         <option value="dinheiro">Dinheiro</option>
+                        <option value="pix">PIX</option>
                         <option value="cartao_credito">Cartão de Crédito</option>
                         <option value="cartao_debito">Cartão de Débito</option>
                     </select>

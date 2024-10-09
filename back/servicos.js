@@ -78,8 +78,6 @@ function initializeDatabase() {
         ); 
     `;
 
-  
-
 
     // Executando as queries de criação
     db.exec(createVendaPagamentosTable);
@@ -112,7 +110,6 @@ function initializeDatabase() {
     `;
     db.exec(createRevertTrigger);
 }
-
 function getCurrentDateTime() {
     const now = new Date();
     const options = {
@@ -159,9 +156,9 @@ function fecharCaixa(id_caixa, valor_final) {
 }
 
 function confirmarVendas(id_caixa, valor_total) {
-        console.log("aaaaaaaaaaaa", id_caixa, valor_total);
+        console.log("Entrou no serviço de confirmar venda: ", id_caixa, valor_total);
         const data_hora_venda = getCurrentDateTime(); // Pega a data e hora atual no formato ISO
-        //console.log("DATA E HORA", data_hora_venda);
+        
         const stmt = db.prepare(`
             INSERT INTO vendas (id_caixa, data_hora_venda, valor_total) 
             VALUES (?, ?, ?)
@@ -254,9 +251,9 @@ function adicionarItemVenda(idCaixa,total,pagamentos,produtos) {
 
 
 // Função para cadastrar um produto com a DDDescrição
-function cadastrarProduto(nome, valor_compra, valor, descricao, codigo_barras) {
-    const stmt = db.prepare('INSERT INTO produtos (nome, valor_compra, valor, descricao, codigo_barras) VALUES (?, ?, ?, ?, ?)');
-    return stmt.run(nome, valor_compra, valor, descricao, codigo_barras);
+function cadastrarProduto(nome, valor_compra, valor, validade, codigo_barras) {
+    const stmt = db.prepare('INSERT INTO produtos (nome, valor_compra, valor, validade, codigo_barras) VALUES (?, ?, ?, ?, ?)');
+    return stmt.run(nome, valor_compra, valor, validade, codigo_barras);
 }
 
 
@@ -275,7 +272,7 @@ function buscarEstoque(busca = '') {
             produtos.nome, 
             produtos.valor_compra,
             produtos.valor,
-            produtos.descricao,
+            produtos.validade,
             produtos.codigo_barras, 
             estoque.quantidade
             
@@ -453,14 +450,14 @@ async function calcularReceitaCustoLucro(vendas) {
     };
 }
 // Função para atualizar os dados de um produto
-function atualizarProduto(idProduto, nome, valor_compra, valor, descricao) {
+function atualizarProduto(idProduto, nome, valor_compra, valor, validade) {
     const stmt = db.prepare(`
       UPDATE produtos 
-      SET nome = ?, valor_compra = ?, valor = ?, descricao = ? 
+      SET nome = ?, valor_compra = ?, valor = ?, validade = ? 
       WHERE id_produto = ?
     `);
-    console.log("Servico de att produto", idProduto, nome, valor_compra, valor, descricao);
-    return stmt.run(nome, valor_compra, valor, descricao, idProduto);
+    console.log("Servico de att produto: ", idProduto, nome, valor_compra, valor, validade);
+    return stmt.run(nome, valor_compra, valor, validade, idProduto);
   }
 
   // Função para buscar vendas de um caixa específico
