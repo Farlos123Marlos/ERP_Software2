@@ -1,0 +1,4 @@
+db.exec(`
+        ALTER TABLE produtos
+        ADD COLUMN validade DATE;
+    `);

@@ -2,29 +2,6 @@ const servicos = require('./servicos');
 const { printReceipt } = require('./Imp.js');
 
 
-// Relatório de vendas por data
-/*function relatorioVendasData(req, res) {
-    const { dataInicial, dataFinal } = req.query;
-
-    try {
-        const relatorio = servicos.obterRelatorioPorData(dataInicial, dataFinal);
-        res.status(200).json(relatorio);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar relatório de vendas por data' });
-    }
-}
-
-// Relatório de vendas por caixa
-function relatorioVendasCaixa(req, res) {
-    const { idCaixa } = req.query;
-
-    try {
-        const relatorio = servicos.obterRelatorioPorCaixa(idCaixa);
-        res.status(200).json(relatorio);
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao buscar relatório de vendas por caixa' });
-    }
-}*/
 
 // Controle para inserir usuário
 function AtualizarEstoque(req, res) {
@@ -53,7 +30,6 @@ function AtualizarEstoque(req, res) {
         // Retornar sucesso com o ID do produto e a quantidade inserida no estoque
         res.status(201).json({ id: produtoId, quantidade: qtd });
     } catch (error) {
-        //console.log("AI N ENTRA");
         // Retornar erro ao atualizar o estoque
         return res.status(500).json({ error: 'Erro ao atualizar o estoque' });
     }
@@ -136,11 +112,11 @@ function adicionarEstoque(req, res) {
 }
 
 function AtualizarEstoque(req, res) {
-    const { nomeProduto, valorDe, valor, descricao, codigoBarras, qtd } = req.body;
+    const { nomeProduto, valorDe, valor, validade, codigoBarras, qtd } = req.body;
     let produtoId;
     
     try {
-        const result = servicos.cadastrarProduto(nomeProduto, valorDe, valor, descricao, codigoBarras);
+        const result = servicos.cadastrarProduto(nomeProduto, valorDe, valor, validade, codigoBarras);
         produtoId = result.lastInsertRowid;
     } catch (error) {
         return res.status(500).json({ error: 'Erro ao cadastrar o produto' });
@@ -154,11 +130,12 @@ function AtualizarEstoque(req, res) {
     }
 }
 function atualizarProduto(req, res) {
-    const { idProduto, nomeProduto, valorDe, valor, descricao } = req.body;
-    console.log("aaaaa",idProduto, nomeProduto, valorDe, valor, descricao);
+    const { idProduto, nomeProduto, valorDe, valor, validade, qtd } = req.body;
+    console.log("Entrou em Atualizar Produto:", idProduto, nomeProduto, valorDe, valor, validade, qtd);
     try {
       // Chama o serviço para atualizar o produto
-      servicos.atualizarProduto(idProduto, nomeProduto, valorDe, valor, descricao);
+      servicos.atualizarProduto(idProduto, nomeProduto, valorDe, valor, validade);
+      servicos.adicionarAoEstoque(idProduto, qtd);
       res.status(200).json({ message: 'Produto atualizado com sucesso!' });
     } catch (error) {
       res.status(500).json({ error: 'Erro ao atualizar o produto: ' + error.message });

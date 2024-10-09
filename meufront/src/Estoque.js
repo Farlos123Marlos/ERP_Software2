@@ -7,10 +7,9 @@ const Estoque = () => {
   const [valorCompra, setValor] = useState('');
   const [codigoBarras, setCodigoBarras] = useState('');
   const [quantidadeEstoque, setQuantidadeEstoque] = useState('');
-  const [descricaoProduto, setDescricaoProduto] = useState(''); // Estado para a descrição do produto
+  const [validadeProduto, setValidadeProduto] = useState('');
   const [produtos, setProdutos] = useState([]);
   const [busca, setBusca] = useState('');
-  const [quantidadeAdicional, setQuantidadeAdicional] = useState('');
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
   const [modalVisivel, setModalVisivel] = useState(false);
   const userId = sessionStorage.getItem('userId');
@@ -20,14 +19,54 @@ const Estoque = () => {
   // Função para buscar produtos da API
   const buscarProdutos = async () => {
     try {
-      console.log("test");
       const response = await fetch(`http://localhost:3001/buscarEstoque?busca=${busca}`);
       const data = await response.json();
       setProdutos(data);
+      verificarValidade(data);
+
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
     }
   };
+
+  // Função para verificar a validade dos produtos e exibir um único alert com todos os produtos
+const verificarValidade = (produtos) => {
+  const hoje = new Date();
+  let produtosExpirados = [];
+  let produtosPrestesAExpirar = [];
+
+  produtos.forEach((produto) => {
+    const validadeProduto = new Date(produto.validade);  // Converter a validade para objeto Date
+    
+    // Calcular a diferença em milissegundos
+    const diffTime = validadeProduto - hoje;
+    
+    // Converter a diferença em dias
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Verificar se o produto já passou da validade ou está a 7 dias de expirar
+    if (diffDays < 0) {
+      produtosExpirados.push(`${produto.nome} (expirou em ${validadeProduto.toLocaleDateString()})`);
+    } else if (diffDays <= 7) {
+      produtosPrestesAExpirar.push(`${produto.nome} (expira em ${diffDays} dias, ${validadeProduto.toLocaleDateString()})`);
+    }
+  });
+
+  // Se houver produtos expirados ou prestes a expirar, exibir alert
+  if (produtosExpirados.length > 0 || produtosPrestesAExpirar.length > 0) {
+    let mensagemAlerta = '';
+
+    if (produtosExpirados.length > 0) {
+      mensagemAlerta += `Produtos já expirados:\n${produtosExpirados.join('\n')}\n\n`;
+    }
+
+    if (produtosPrestesAExpirar.length > 0) {
+      mensagemAlerta += `Produtos prestes a expirar (em até 7 dias):\n${produtosPrestesAExpirar.join('\n')}`;
+    }
+
+    alert(mensagemAlerta);
+  }
+};
 
   // Chamada inicial para carregar os produtos
   useEffect(() => {
@@ -42,7 +81,7 @@ const Estoque = () => {
       valorDe: valorVenda, 
       valor: valorCompra, 
       codigoBarras, 
-      descricao: descricaoProduto, // Inclui a descrição no produto
+      validade: validadeProduto, 
       qtd: quantidadeEstoque 
     };
 
@@ -59,7 +98,7 @@ const Estoque = () => {
         setValorVenda('');
         setValor('');
         setCodigoBarras('');
-        setDescricaoProduto(''); // Limpa o campo de descrição
+        setValidadeProduto('');
         setQuantidadeEstoque('');
       }
     } catch (error) {
@@ -83,11 +122,12 @@ const Estoque = () => {
       nomeProduto: produtoSelecionado.nome,
       valorDe: produtoSelecionado.valor_compra,
       valor: produtoSelecionado.valor,
-      descricao: produtoSelecionado.descricao,
+      validade: produtoSelecionado.validade,
+      qtd: parseInt(produtoSelecionado.qtd, 10)
     };
 
     try {
-      //console.log("valoress no front",produtoSelecionado.id,produtoSelecionado.nome, produtoSelecionado.valorDe,produtoSelecionado.valor,produtoSelecionado.descricao);
+      
       const response = await fetch('http://localhost:3001/atualizarProduto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -112,39 +152,6 @@ const Estoque = () => {
     setProdutoSelecionado(null); // Limpa o produto selecionado
   };
 
-  // Função para adicionar quantidade ao estoque
-  const adicionarQuantidade = async () => {
-    if (!quantidadeAdicional || isNaN(quantidadeAdicional)) {
-      alert('Por favor, insira uma quantidade válida.');
-      return;
-    }
-
-    const dados = {
-      id: produtoSelecionado.id_produto,  // Certifique-se de que produtoSelecionado tem o campo 'id'
-      quantidade: parseInt(quantidadeAdicional, 10),
-    };
-
-    console.log('Dados enviados:', dados);  // Log para verificar se o id está correto
-
-    try {
-      const response = await fetch('http://localhost:3001/addQtd', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dados),
-      });
-
-      if (response.ok) {
-        alert('Quantidade adicionada com sucesso!');
-        buscarProdutos(); // Atualiza a lista de produtos
-        fecharModal();
-      } else {
-        alert('Erro ao adicionar quantidade.');
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar quantidade:', error);
-      alert('Erro ao adicionar quantidade.');
-    }
-  };
 
   return (
     <div className="estoque-container">
@@ -186,11 +193,11 @@ const Estoque = () => {
             required
           />
 
-          <label>Descrição do Produto:</label>  {/* Campo de descrição */}
+          <label>Alterar validade:</label> 
           <input
-            type="text"
-            value={descricaoProduto}
-            onChange={(e) => setDescricaoProduto(e.target.value)}
+            type="date"
+            value={validadeProduto}
+            onChange={(e) => setValidadeProduto(e.target.value)}
             required
           />
 
@@ -224,7 +231,7 @@ const Estoque = () => {
                 <th>Valor de Compra</th>
                 <th>Código de Barras</th>
                 <th>Quantidade em Estoque</th>
-                <th>Descrição</th>
+                <th>Validade<br />AAAA-MM-DD</th>
                 <th>Ações</th> {/* Nova coluna para ações */}
               </tr>
             </thead>
@@ -236,7 +243,7 @@ const Estoque = () => {
                   <td>{produto.valor}</td>
                   <td>{produto.codigo_barras}</td>
                   <td>{produto.quantidade}</td>
-                  <td className="table-descricao">{produto.descricao}</td>
+                  <td>{produto.validade}</td>
                   <td>
                     <button onClick={() => abrirModalEditar(produto)}>Editar</button> {/* Botão de editar */}
                   </td>
@@ -277,12 +284,19 @@ const Estoque = () => {
                     required
                   />
 
-                  <label>Descrição do Produto:</label>
+                  <label>Alterar validade:</label>
                   <input
-                    type="text"
-                    value={produtoSelecionado.descricao}
-                    onChange={(e) => setProdutoSelecionado({ ...produtoSelecionado, descricao: e.target.value })}
-                    required
+                    type="date"
+                    value={produtoSelecionado.validade}
+                    onChange={(e) => setProdutoSelecionado({ ...produtoSelecionado, validade: e.target.value })}
+                  />
+
+                  <label>Adicionar quantidade:</label>
+                  <input
+                    type="number"
+                    step="1"
+                    value={produtoSelecionado.qtd}
+                    onChange={(e) => setProdutoSelecionado({ ...produtoSelecionado, qtd: e.target.value })}
                   />
 
                   <button type="submit">Salvar Alterações</button>
