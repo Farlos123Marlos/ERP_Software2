@@ -22,10 +22,26 @@ const Estoque = () => {
       const response = await fetch(`http://localhost:3001/buscarEstoque?busca=${busca}`);
       const data = await response.json();
       setProdutos(data);
-      verificarValidade(data);
-
+      return data;
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+    }
+  };
+
+  // Função para excluir produto
+  const excluirProduto = async (idProduto) => {
+    try {
+      const response = await fetch(`http://localhost:3001/excluirProduto/${idProduto}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        alert('Produto excluído com sucesso!');
+        buscarProdutos(); // Atualiza a lista de produtos
+      } else {
+        console.error('Erro ao excluir o produto');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir o produto:', error);
     }
   };
 
@@ -68,10 +84,21 @@ const verificarValidade = (produtos) => {
   }
 };
 
-  // Chamada inicial para carregar os produtos
-  useEffect(() => {
-    buscarProdutos();
-  }, [busca]);
+useEffect(() => {
+  buscarProdutos(); // Apenas busca os produtos sem verificar validade
+}, [busca]);
+
+
+useEffect(() => {
+  const inicializarProdutos = async () => {
+    const produtosBuscados = await buscarProdutos(); // Primeiro busca os produtos
+    verificarValidade(produtosBuscados); // Depois verifica a validade
+  };
+
+  inicializarProdutos();
+}, []); // [] garante que esse efeito só execute uma vez, quando o componente é montado
+
+
 
   // Função de cadastro de produto
   const cadastrarProduto = async (e) => {
@@ -246,6 +273,7 @@ const verificarValidade = (produtos) => {
                   <td>{produto.validade}</td>
                   <td>
                     <button onClick={() => abrirModalEditar(produto)}>Editar</button> {/* Botão de editar */}
+                    <button onClick={() => excluirProduto(produto.id)}>Excluir</button>
                   </td>
                 </tr>
               ))}
