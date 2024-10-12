@@ -15,7 +15,7 @@ function Venda() {
 
 
     const adicionarPagamento = () => {
-        if (valorPagamento > 0 && valorPagamento <= valorFaltante) {
+        if (valorPagamento > 0 && valorPagamento <= (valorFaltante+1)) {
             const novoPagamento = {
                 metodo_pagamento: formaPagamentoAtual,
                 valor: valorPagamento,
@@ -167,9 +167,10 @@ function Venda() {
                 </ul>
 
                 {/* Botão para confirmar venda quando o valor total for coberto */}
-                {valorFaltante === 0 && (
-                    <button onClick={confirmarVenda}>Confirmar Venda</button>
-                )}
+                {valorFaltante <= 0 && (
+    <button onClick={confirmarVenda}>Confirmar Venda</button>
+)}
+
             </div>
         </div>
     );
